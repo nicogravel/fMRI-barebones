@@ -246,11 +246,7 @@ PLATFORMS
 
 DEPENDENCIES
   github-pages (= 204)
-  jekyll
   pygments.rb
-
-RUBY VERSION
-   ruby 2.7.0p0
 
 BUNDLED WITH
    2.1.4

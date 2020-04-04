@@ -1,3 +1,4 @@
 name: Nicolas Gravel
 markdown: kramdown
 highlighter: rouge
+baseurl: ""
