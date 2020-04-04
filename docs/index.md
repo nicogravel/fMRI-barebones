@@ -5,6 +5,10 @@ title: "fMRI barebones"
 
 # fMRI-barebones
 
+![Picture](/fMRI-barebones/assets/HOatlas.png)
+![Picture](/fMRI-barebones/assets/wang.png)
+![Picture](/fMRI-barebones/assets/benson.png)
+
 A simple yet useful preprocessing pipeline for fMRI data using [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) &amp; [Freesurfer](https://surfer.nmr.mgh.harvard.edu/). 
 
 
