@@ -3,7 +3,7 @@ layout: default
 title: "fMRI barebones"
 ---
 
-## fMRI-barebones
+# fMRI-barebones
 
 A simple yet efficient preprocessing pipeline for fMRI data using [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) &amp; [Freesurfer](https://surfer.nmr.mgh.harvard.edu/). 
 
@@ -24,11 +24,12 @@ A simple yet efficient preprocessing pipeline for fMRI data using [FSL](https://
 - [Using Neuropythy to get anatomically defined ROIs for visual areas](#Using-Neuropythy-to-get-anatomically-defined-ROIs-for-visual-areas)
 - [Get .MGZ files with surface node X ROI parameter (or time series)](#Get-.MGZ-file-with-surface-node-X-ROI-parameter-(or-time-series))
 
+---
 ## Introduction
 
 As a tutorial, fMRI barebones seeks to document and illustrate a set of important and useful steps commonly used in fMRI data preprocessing. As a toolbox, fMRI barebones provides a set of basic examples and scripts to help harness the power of [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) &amp; [Freesurfer](https://surfer.nmr.mgh.harvard.edu/).
 
 ---
-### Requirements
+## Requirements
 
 The tools are implemented from the command line using shell scripts commands. It has been devolped in OSX (should be easily adapted to Linux), FSL, Freesurfer, Python (ICA-AROMA and Neuropithy) and Matlab.
