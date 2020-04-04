@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>fMRI barebones</title>
+    
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+  
+  </head>
+
+
+  <body>
+    <nav>
+<ul>
+<li><a href="/fMRI-barebones">Home</a></li>
+</ul>
+    </nav>
+<div class="container">
+
+  <h1 id="fmri-barebones">fMRI-barebones</h1>
+
+<p>A simple yet efficient preprocessing pipeline for fMRI data using <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki">FSL</a> &amp; <a href="https://surfer.nmr.mgh.harvard.edu/">Freesurfer</a>.</p>
+
+<ul>
+  <li><a href="#Introduction">Introduction</a></li>
+  <li><a href="#Requirements">Requirements</a></li>
+  <li><a href="#Alignment">Alignment</a></li>
+  <li><a href="#Tissue-segmentation">Tissue segmentation</a></li>
+  <li><a href="#Skull-stripping-(BET)">Skull stripping (BET)</a></li>
+  <li><a href="#Linear-registratiion-(FLIRT)">Linear registratiion (FLIRT)</a></li>
+  <li><a href="#Non-linear-registrationn-(FNIRT)">Non-linear registrationn (FNIRT)</a></li>
+  <li><a href="#Functional-to-structural-co-registration-(BBR)">Functional to structural co-registration (BBR)</a></li>
+  <li><a href="#Automatic-Removal-of-Motion-Artifacts-(ICA-AROMA)">Automatic Removal of Motion Artifacts (ICA-AROMA)</a></li>
+  <li><a href="#Extracting-ROIs-from-atlases">Extracting ROIs from atlases</a></li>
+  <li><a href="#Retrieving-BOLD-time-series-from-ROIs">Retrieving BOLD time series from ROIs</a></li>
+  <li><a href="#Projecting-data-a-cortical-surface-reconstruction">Projecting data to a cortical surface reconstruction</a></li>
+  <li><a href="#Using-freesurfer-coregistration">Using Freesurfer coregistration</a></li>
+  <li><a href="#Using-Neuropythy-to-get-anatomically-defined-ROIs-for-visual-areas">Using Neuropythy to get anatomically defined ROIs for visual areas</a></li>
+  <li><a href="#Get-.MGZ-file-with-surface-node-X-ROI-parameter-(or-time-series)">Get .MGZ files with surface node X ROI parameter (or time series)</a></li>
+</ul>
+
+<hr />
+<h2 id="introduction">Introduction</h2>
+
+<p>As a tutorial, fMRI barebones seeks to document and illustrate a set of important and useful steps commonly used in fMRI data preprocessing. As a toolbox, fMRI barebones provides a set of basic examples and scripts to help harness the power of <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki">FSL</a> &amp; <a href="https://surfer.nmr.mgh.harvard.edu/">Freesurfer</a>.</p>
+
+<hr />
+<h2 id="requirements">Requirements</h2>
+
+<p>The tools are implemented from the command line using shell scripts commands. It has been devolped in OSX (should be easily adapted to Linux), FSL, Freesurfer, Python (ICA-AROMA and Neuropithy) and Matlab.</p>
+
+
+</div>
+  
+  </body>
+
+</html>
