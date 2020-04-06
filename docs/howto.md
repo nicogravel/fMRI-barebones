@@ -28,6 +28,8 @@ title: "fMRI-barebones"
 13. [Import Freesurfer data into Pycortex](/fMRI-barebones/howto.html#13)
 14. [Compute cortical (geodesic) distances in millimeters using Pycortex](/fMRI-barebones/howto.html#14)
 15. [Load data in Matlab and Python](/fMRI-barebones/howto.html#15)
+
+
 ---
 
 <a name="1"></a>
