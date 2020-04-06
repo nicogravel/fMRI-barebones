@@ -17,7 +17,7 @@ title: "fMRI-barebones"
 2. [Cortical surface reconstruction using Freesurfer](/fMRI-barebones/howto.html#2)
 3. [Obtain Freesurfer retinotopic templates and atlases for cortical visual regions using Neuropythy](/fMRI-barebones/howto.html#3)
 4. [Skull stripping using FSL (optional)](/fMRI-barebones/howto.html#4)
-5. [Linear registration to standard space using FSL](/howto.html#5)
+5. [Linear registration to standard space using FSL](/fMRI-barebones/howto.html#5)
 6. [Non-linear registration to standard space using FSL](/fMRI-barebones/howto.html#6)
 7. [Functional to structural co-registration using Freesurfer](/fMRI-barebones/howto.html#7)
 8. [Functional to structural co-registration using FSL (optional)](/fMRI-barebones/howto.html#8)
