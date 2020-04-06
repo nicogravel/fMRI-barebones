@@ -2,3 +2,6 @@ name: Nicolas Gravel
 markdown: kramdown
 highlighter: rouge
 baseurl: ""
+footer-links:
+  github: nicogravel
+  twitter: nicog

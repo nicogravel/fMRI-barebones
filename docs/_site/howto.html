@@ -1,25 +1,614 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>fMRI barebones</title>
-    
-    <link rel="stylesheet" type="text/css" href="/css/main.css">
-  </head>
+    <title>fMRI-barebones</title>
+    <link rel="stylesheet" type="text/css" href="/fMRI-barebones/css/main.css">  
+<!--      <link rel="stylesheet" type="text/css" href="/css/main.css"> 
+ -->  </head>
 
 
   <body>
     <nav>
 <ul>
-<li><a href="">Home</a></li>
+<li><a href="index.html">Index</a></li>
 </ul>
     </nav>
 <div class="container">
 
-  <h3 id="setup">Setup</h3>
+  <h1 id="fmri-barebones-tutorial">fMRI-barebones <strong>tutorial</strong></h1>
+
+<p><img src="/fMRI-barebones/assets/HOatlas.png" alt="cort" /></p>
+
+<hr />
+
+<h3 id="contents">Contents:</h3>
+
+<ol>
+  <li><a href="/howto.html#1">Setup</a></li>
+  <li><a href="/howto.html#2">Cortical surface reconstruction using Freesurfer</a></li>
+  <li><a href="/howto.html#3">Obtain Freesurfer retinotopic templates and atlases for cortical visual regions using Neuropythy</a></li>
+  <li><a href="/howto.html#4">Skull stripping using FSL (optional)</a></li>
+  <li><a href="/howto.html#5">Linear registration to standard space using FSL</a></li>
+  <li><a href="/howto.html#6">Non-linear registration to standard space using FSL</a></li>
+  <li><a href="/howto.html#7">Functional to structural co-registration using Freesurfer</a></li>
+  <li><a href="/howto.html#8">Functional to structural co-registration using FSL (optional)</a></li>
+  <li><a href="/howto.html#9">Remove motion artifacts using ICA-AROMA</a></li>
+  <li><a href="/howto.html#10">Obtain BOLD time series from ROIs in FSL atlases</a></li>
+  <li><a href="/howto.html#11">Create .MGZ files with surface-node X ROI parameter/time series</a></li>
+  <li><a href="/howto.html#12">Project data to the cortical surface reconstruction</a></li>
+  <li><a href="/howto.html#13">Import Freesurfer data into Pycortex</a></li>
+  <li><a href="/howto.html#14">Compute cortical (geodesic) distances in millimeters using Pycortex</a></li>
+  <li><a href="/howto.html#15">Load data in Matlab and Python</a></li>
+</ol>
+
+<hr />
+
+<p><a name="1"></a></p>
+
+<h2 id="1--setup"><strong>1.-</strong> Setup</h2>
+
+<p>In its present form, fMRI-barebones is a minimal fMRI preprocessing pipeline implemented in terminal using shell scripts (files containing a series of commands). At the moment it works in OSX, but should be easily adapted to Linux. To succesfully edit and run fMRI-barebones template scripts, you need FSL, Freesurfer and a Python environment (with the correct depencies for ICA-AROMA, Neuropythy and Pycortex) correctly installed, and Matlab/Jupyter (for analytics and visualzation).</p>
+
+<p>As input, you need MRI data: 1) a structural nifti file (T1.nii.gz) and 2) functional runs named run001.nii.gz, run002.nii.gz, etc. It outputs: 1) cleaned single-subject functional data in native volumetric space (as cleanfunc.nii.gz) and its associated cortical surface reconstruction (func2surf_lh.mgz and func2surf_rh.mgz). 2) retinotopic template maps for early visual cortex (Benson). 3) probabilistic templates for early and higher and visual cortical regions (Wang-Kastner). 4) optional: geodesic distance between cortical surface nodes in millimiters.</p>
+
+<hr />
+
+<p><a name="2"></a></p>
+
+<h2 id="2--cortical-surface-reconstruction-using-freesurfer"><strong>2.-</strong> Cortical surface reconstruction using Freesurfer</h2>
+
+<p>This is an important and useful step commonly used in human visual neuroscience to study topographically organized cortical regions (rather than just tissue un-specific blobs in volumetric voxel space). It accurately segments brain tissues and reconstructs individual cortcal surfaces.</p>
+
+<p>Jump the next step in case you are interested in obtaining BOLD data in volumetric voxel space only (e.g. from FSL atlases).</p>
+
+<p>The following commands assume you have your T1 file inside a folder “anat”, inside your subject data folder (e.g. “…/S15/anat/”).</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">FREESURFER_HOME</span><span class="o">=</span>/Applications/freesurfer
+<span class="nb">source</span> <span class="nv">$FREESURFER_HOME</span>/SetUpFreeSurfer.sh
+<span class="nb">export </span><span class="nv">data_folder</span><span class="o">=</span>/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe
+
+<span class="c"># Reconstruct cortical surface</span>
+<span class="nb">export </span><span class="nv">subjnum</span><span class="o">=</span>15
+<span class="nb">export </span><span class="nv">subjid</span><span class="o">=</span>S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">pth</span><span class="o">=</span><span class="k">${</span><span class="nv">data_folder</span><span class="k">}</span>/<span class="k">${</span><span class="nv">subjid</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">t1file</span><span class="o">=</span>T1_orig.nii
+recon-all <span class="nt">-s</span> <span class="k">${</span><span class="nv">subjid</span><span class="k">}</span> <span class="nt">-i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/<span class="k">${</span><span class="nv">t1file</span><span class="k">}</span> <span class="nt">-all</span> <span class="nt">-3T</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: It is recommended to pre-align the original T1 to AC-PC coordinates. This helps Freesurfer find the center of mass of the head improving recon-all performance (use the flag -3T if you are preprocessing 3T data).</p>
+</blockquote>
+
+<hr />
+
+<p><a name="3"></a></p>
+
+<h2 id="3--obtain-freesurfer-retinotopic-templates-and-atlases-for-cortical-visual-regions-using-neuropythy"><strong>3.-</strong> Obtain Freesurfer retinotopic templates and atlases for cortical visual regions using Neuropythy</h2>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>conda create <span class="nt">-n</span> neuroConda <span class="nv">python</span><span class="o">=</span>2.7
+
+<span class="nb">source </span>activate neuroConda
+pip <span class="nb">install </span>neuropythy nipype numpy matplotlib ipyvolume
+
+<span class="c"># Benson and Wang-Kasnter Atlases</span>
+python <span class="nt">-m</span> neuropythy benson14_retinotopy <span class="nt">--verbose</span> S<span class="nv">$subjnum</span> 
+python <span class="nt">-m</span> neuropythy atlas <span class="nt">--verbose</span> S<span class="nv">$subjnum</span> 
+
+deactivate neuroConda
+</code></pre></div></div>
+
+<hr />
+
+<p><a name="4"></a></p>
+
+<h2 id="4--skull-stripping-using-fsl-optional"><strong>4.-</strong> Skull stripping using FSL (optional)</h2>
+
+<p>A decently stripped brain is mandatory for for the following steps to work. One possibility is to take the stripped brains from Freesurfer (if it has been run previously), it does a better job than BET.</p>
+
+<p>It is recommended to do intensity normalization using Freesurfer before using FSL’s tool BET. 
+The original T1 typically has signal intensity gradients and dropouts. A solution is to use fieldmaps to correct for the artifacts produced the magnetic field inhomogeneity. Fieldmaps are not always available. In this case, a simple N3 normalization improves things a bit.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">FREESURFER_HOME</span><span class="o">=</span>/Applications/freesurfer
+<span class="nb">source</span> <span class="nv">$FREESURFER_HOME</span>/SetUpFreeSurfer.sh
+<span class="nb">export </span><span class="nv">data_folder</span><span class="o">=</span>/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe
+<span class="nb">export </span><span class="nv">subjnum</span><span class="o">=</span>15
+<span class="nb">export </span><span class="nv">subjid</span><span class="o">=</span>S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">pth</span><span class="o">=</span><span class="k">${</span><span class="nv">data_folder</span><span class="k">}</span>/<span class="k">${</span><span class="nv">subjid</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">t1file</span><span class="o">=</span>T1_orig.nii
+
+mri_convert <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/<span class="k">${</span><span class="nv">t1file</span><span class="k">}</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1.mgz
+mri_nu_correct.mni <span class="nt">--i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1.mgz <span class="nt">--o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1_N3.mgz <span class="nt">--n</span> 2
+mri_normalize <span class="nt">-g</span> 1 <span class="nt">-mprage</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1_N3.mgz <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1_norm.mgz
+mri_convert <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1_norm.mgz <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1_norm.nii.gz
+
+bet <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1_norm.nii.gz <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1_norm_brain <span class="nt">-f</span> 0.5 <span class="nt">-R</span> <span class="nt">-B</span>
+</code></pre></div></div>
+
+<p><img src="/fMRI-barebones/assets/orig.png" alt="orig" />
+<img src="/fMRI-barebones/assets/n3norm.png" alt="n3norm" /></p>
+
+<blockquote>
+  <p>Note: It is also recommended to pre-align the T1 to ACPC coordinates. This helps BET find the center of mass of the head improving its performance considerably.</p>
+</blockquote>
+
+<hr />
+
+<p><a name="5"></a></p>
+
+<h2 id="5--linear-registration-to-standard-space-using-fsl"><strong>5.-</strong> Linear registration to standard space using FSL</h2>
+
+<p>The following snippet shows how to do a structural to standard linear registration using FLIRT on the outputs of Freesurfer recon-all. This is preferable and more accurate than using the output from FSL’s BET (which may require extra tweaking).</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mri_convert <span class="k">${</span><span class="nv">FREESURFER_HOME</span><span class="k">}</span>/subjects/S<span class="nv">$subjnum</span>/mri/T1.mgz <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1.nii.gz
+mri_convert <span class="k">${</span><span class="nv">FREESURFER_HOME</span><span class="k">}</span>/subjects/S<span class="nv">$subjnum</span>/mri/brain.mgz <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain.nii.gz
+mri_convert <span class="k">${</span><span class="nv">FREESURFER_HOME</span><span class="k">}</span>/subjects/S<span class="nv">$subjnum</span>/mri/brainmask.mgz <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brainmask.nii.gz
+</code></pre></div></div>
+
+<p>The following snippet shows how to reorient Freesurfer’s recon-all outputs to the FSL coordinate system. This is important, since FSL algorithms depend on FSL’s own coordinate system to work.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fslswapdim <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1.nii.gz z <span class="nt">-x</span> <span class="nt">-y</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1.nii.gz
+fslswapdim <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain.nii.gz z <span class="nt">-x</span> <span class="nt">-y</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain.nii.gz
+fslswapdim <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brainmask.nii.gz z <span class="nt">-x</span> <span class="nt">-y</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brainmask.nii.gz
+fslreorient2std <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/T1.nii.gz
+fslreorient2std <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain.nii.gz
+fslreorient2std <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brainmask.nii.gz
+</code></pre></div></div>
+
+<p>The following snippet shows how to run FLIRT to register the preprocessed T1 to standard MNI152 space. Creates the affine matrix transform needed later by FNIRT and other steps.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Make folder to store the registration files:</span>
+<span class="nb">mkdir</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg
+
+<span class="c"># Run FLIRT:</span>
+flirt <span class="nt">-ref</span> <span class="k">${</span><span class="nv">FSLDIR</span><span class="k">}</span>/data/standard/MNI152_T1_2mm_brain.nii.gz <span class="nt">-in</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain <span class="se">\</span>
+<span class="nt">-out</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNIlin.nii.gz <span class="nt">-omat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNIlin.mat <span class="nt">-cost</span> normcorr <span class="se">\</span>
+<span class="nt">-dof</span> 12 <span class="nt">-interp</span> spline <span class="c">#-refweight -searchrx -1 1 -searchry -1 1 -searchrz -1 1 # -in ${pth}/anat/brain -nosearch </span>
+
+<span class="c"># Check if results are going well:</span>
+<span class="c">#fsleyes ${FSLDIR}/data/standard/MNI152_T1_2mm_brain ${pth}/reg/T1toMNIlin </span>
+</code></pre></div></div>
+
+<p>This gives the affine matrix: T1toMNIlin.mat</p>
+
+<hr />
+
+<p><a name="6"></a></p>
+
+<h2 id="6--non-linear-registration-to-standard-space-using-fsl"><strong>6.-</strong> Non-linear registration to standard space using FSL</h2>
+
+<p>This step depends on the affine matrix previously obtained.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">struct</span><span class="o">=</span>T1 
+
+fnirt <span class="nt">--in</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/<span class="k">${</span><span class="nv">struct</span><span class="k">}</span> <span class="nt">--aff</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNIlin.mat <span class="nt">--cout</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNI_coef.nii.gz <span class="se">\</span>
+<span class="nt">--fout</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNI_warp.nii.gz <span class="nt">--ref</span><span class="o">=</span><span class="k">${</span><span class="nv">FSLDIR</span><span class="k">}</span>/data/standard/MNI152_T1_2mm.nii.gz <span class="se">\</span>
+<span class="nt">--refmask</span><span class="o">=</span><span class="k">${</span><span class="nv">FSLDIR</span><span class="k">}</span>/data/standard/MNI152_T1_2mm_brain_mask_dil.nii.gz <span class="nt">--config</span><span class="o">=</span>T1_2_MNI152_2mm.cnf
+</code></pre></div></div>
+
+<p>This gives the files T1toMNI_coef.nii.gz and T1toMNI_warp.nii.gz</p>
+
+<p>To see if things are going well, we apply the tranform to the stripped brain and visualize the results using fsleyes:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain <span class="nt">-r</span> <span class="nv">$FSLDIR</span>/data/standard/MNI152_T1_2mm_brain.nii.gz <span class="se">\</span>
+<span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNI_warp.nii.gz <span class="nt">--interp</span><span class="o">=</span>nn <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNInonlin_brain.nii.gz
+
+<span class="c"># Visualize results:</span>
+<span class="c">#fsleyes ${FSLDIR}/data/standard/MNI152_T1_2mm ${pth}/reg/T1toMNIlin ${pth}/reg/T1toMNInonlin_brain </span>
+</code></pre></div></div>
+
+<hr />
+
+<p><a name="7"></a></p>
+
+<h2 id="7--functional-to-structural-co-registration-using-freesurfer"><strong>7.-</strong> Functional to structural co-registration using Freesurfer</h2>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">FREESURFER_HOME</span><span class="o">=</span>/Applications/freesurfer
+<span class="nb">source</span> <span class="nv">$FREESURFER_HOME</span>/SetUpFreeSurfer.sh
+<span class="nb">export </span><span class="nv">data_folder</span><span class="o">=</span>/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe
+
+<span class="nb">export </span><span class="nv">subjnum</span><span class="o">=</span>15
+<span class="nb">export </span><span class="nv">subjid</span><span class="o">=</span>S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">pth</span><span class="o">=</span><span class="k">${</span><span class="nv">data_folder</span><span class="k">}</span>/<span class="k">${</span><span class="nv">subjid</span><span class="k">}</span>
+
+<span class="nb">export </span><span class="nv">file</span><span class="o">=</span>rest_YYYYMMDD_01.nii
+<span class="nb">export </span><span class="nv">scan</span><span class="o">=</span>run01
+
+<span class="c"># Reorient functional volumes:</span>
+
+fslreorient2std <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">file</span><span class="k">}</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>
+
+<span class="c"># Discard first volumes:</span>
+
+<span class="nb">export </span><span class="nv">discard</span><span class="o">=</span>0
+<span class="nb">export </span><span class="nv">keep</span><span class="o">=</span>210
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="k">${</span><span class="nv">discard</span><span class="k">}</span> <span class="k">${</span><span class="nv">keep</span><span class="k">}</span>
+
+<span class="c"># Motion correction:</span>
+
+mcflirt <span class="nt">-in</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="nt">-out</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mcf <span class="nt">-plots</span> <span class="nt">-refvol</span> 1 <span class="nt">-stats</span> <span class="nt">-report</span> 
+
+fslmaths <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="nt">-s</span> 6 <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_smoothed
+
+fsl_motion_outliers <span class="nt">-i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/temp <span class="nt">-s</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_fd.txt <span class="nt">--fdrms</span>
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/temp
+
+
+<span class="c"># Create brain mask for functional data:</span>
+
+fslmaths <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="nt">-Tmean</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean
+bet <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_brain <span class="nt">-f</span> 0.3 <span class="nt">-n</span> <span class="nt">-m</span> <span class="nt">-R</span> 
+
+
+<span class="c"># Functional to structural co-registration using Freesurfer's mri_coreg  and bbregister:</span>
+
+mri_coreg <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/tkreg_run<span class="nv">$cond</span>.lta <span class="nt">--debug</span>
+
+bbregister <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--bold</span> <span class="nt">--init-reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/tkreg_run<span class="nv">$cond</span>.lta <span class="se">\</span>
+<span class="nt">--fslmat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/fsT2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.dat <span class="nt">--wm-proj-abs</span> 2 <span class="c">#--frame frameno --o ${pth}/fsurf/regtest.nii.gz </span>
+
+<span class="c"># Obtain a struct2func transform by inverting the func2struct transform:</span>
+convert_xfm <span class="nt">-omat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="nt">-inverse</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat
+</code></pre></div></div>
+
+<hr />
+
+<p><a name="8"></a></p>
+
+<h2 id="8--functional-to-structural-co-registration-using-fsl-optional"><strong>8.-</strong> Functional to structural co-registration using FSL (optional)</h2>
+
+<p>Replace mri_coreg  and bbregister in the previous snippet by:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>epi_reg <span class="nt">--epi</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--t1</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/<span class="k">${</span><span class="nv">struct</span><span class="k">}</span>.nii.gz <span class="se">\</span>
+<span class="nt">--t1brain</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain.nii.gz <span class="nt">--out</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>
+</code></pre></div></div>
+
+<hr />
+
+<p><a name="9"></a></p>
+
+<h2 id="9--remove-motion-artifacts-using-ica-aroma"><strong>9.-</strong> Remove motion artifacts using ICA-AROMA</h2>
+
+<p>First we need to install ICA-AROMA:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">arom_pth</span><span class="o">=</span>/Users/username/Documents/Python/ICA-AROMA-master_new
+<span class="nb">cd</span> <span class="k">${</span><span class="nv">arom_pth</span><span class="k">}</span> 
+curl https://bootstrap.pypa.io/get-pip.py | python
+python2.7 <span class="nt">-m</span> pip <span class="nb">install</span> <span class="nt">-r</span> requirements.txt
+</code></pre></div></div>
+
+<p>Now, to use ICA-AROMA we need:</p>
+
+<ul>
+  <li>The T2toT1 affine matrix.</li>
+  <li>The T1toMNI warping coefficients.</li>
+  <li>The T2 motion coefficients.</li>
+  <li>The smoothed T2.</li>
+  <li>The T2 brain mask.</li>
+  <li>The repetition time (TR).</li>
+</ul>
+
+<p>Read ICA-AROMA tutorial and papers!</p>
+
+<p>Then try:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc
+<span class="nb">export </span><span class="nv">arom_pth</span><span class="o">=</span>/Users/username/Documents/Python/ICA-AROMA-master_new
+
+% Repetition <span class="nb">time </span><span class="k">in </span>seconds:
+<span class="nb">export </span><span class="nv">TR</span><span class="o">=</span>2
+
+<span class="c"># Run ICA-AROMA</span>
+python <span class="k">${</span><span class="nv">arom_pth</span><span class="k">}</span>/ICA_AROMA.py <span class="nt">-in</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_smoothed.nii.gz <span class="nt">-out</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/ica_aroma_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="se">\</span>
+<span class="nt">-mc</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mcf.par <span class="nt">-affmat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="nt">-warp</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNI_warp.nii.gz <span class="se">\</span>
+<span class="nt">-m</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_brain_mask.nii.gz <span class="nt">-tr</span> <span class="k">${</span><span class="nv">TR</span><span class="k">}</span> <span class="nt">-den</span> no
+
+<span class="c"># Regress motion components from data:</span>
+fsl_regfilt <span class="nt">-i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.nii.gz <span class="nt">-d</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/ica_aroma_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>/melodic.ica/melodic_mix <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_denoised.nii.gz <span class="nt">-f</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/ica_aroma_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>/classified_motion_ICs.txt
+
+<span class="c"># Check results:</span>
+<span class="c">#fsleyes ${pth}/func/${scan}.nii.gz ${pth}/mc/${scan}_denoised.nii.gz</span>
+</code></pre></div></div>
+
+<hr />
+
+<p><a name="10"></a></p>
+
+<h2 id="10--obtain-bold-time-series-from-rois-in-fsl-atlases"><strong>10.-</strong> Obtain BOLD time series from ROIs in FSL atlases</h2>
+
+<p>The following is the Harvard-Oxford subcortical atlas overlaid on top of the structural data of one subject:</p>
+
+<p><img src="/fMRI-barebones/assets/subc.png" alt="subc" /></p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/results
+<span class="nb">mkdir</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/results/nat
+invwarp <span class="nt">--ref</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/<span class="k">${</span><span class="nv">struct</span><span class="k">}</span>.nii.gz <span class="se">\</span>
+<span class="nt">--warp</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNI_warp <span class="nt">--out</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp
+
+<span class="c">##########################################################################################</span>
+<span class="c"># Compute BOLD % signal change for all voxels</span>
+<span class="c">##########################################################################################</span>
+fslmaths <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_denoised.nii.gz <span class="nt">-Tmean</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline
+fslmaths <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_denoised.nii.gz <span class="nt">-div</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">-mul</span> 100 <span class="nt">-sub</span> 100 <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_BOLD.nii.gz 
+
+<span class="c">##########################################################################################</span>
+<span class="c"># Create mask for left and right hemispheres</span>
+<span class="c">##########################################################################################</span>
+<span class="nb">export </span><span class="nv">atlas_subc</span><span class="o">=</span>/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-sub-prob-2mm.nii.gz
+applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_subc</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
+ <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc_nat <span class="nt">--interp</span><span class="o">=</span>nn
+<span class="c">############################################################</span>
+<span class="c"># Extract masks for left and right cortical hemispheres:</span>
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc_nat leftCortex 01 1 <span class="c"># Left gray matter</span>
+fslmaths leftCortex <span class="nt">-thr</span> 50 leftCortex
+fslmaths leftCortex <span class="nt">-bin</span> leftCortex
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc_nat rightCortex 12 1 <span class="c"># Right gray matter</span>
+fslmaths rightCortex <span class="nt">-thr</span> 50 rightCortex
+fslmaths rightCortex <span class="nt">-bin</span> rightCortex
+</code></pre></div></div>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">############################################################</span>
+<span class="c"># Oxford-Harvard cortical and subcortical atlases:</span>
+<span class="c">############################################################</span>
+<span class="nb">export </span><span class="nv">atlas_cort</span><span class="o">=</span>/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-cort-prob-2mm.nii.gz
+applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_cort</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
+ <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort <span class="nt">--interp</span><span class="o">=</span>nn
+
+<span class="c">############################################################</span>
+<span class="c"># Left hemisphere</span>
+<span class="c"># Loop through ROIs:</span>
+<span class="k">for </span>roinum <span class="k">in </span>0<span class="o">{</span>0..9<span class="o">}</span> <span class="o">{</span>10..47<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
+<span class="c"># Extract ROI from atlas:</span>
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
+<span class="c"># Threshold probabilistic ROI mask:</span>
+fslmaths roimask_<span class="nv">$roinum</span> <span class="nt">-thr</span> 50 <span class="nt">-bin</span> <span class="nt">-mas</span> leftCortex roimask_<span class="nv">$roinum</span> 
+<span class="c"># Extract ROI mean time series:</span>
+fslmeants <span class="nt">-i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_BOLD.nii.gz <span class="nt">-o</span> ts_<span class="nv">$roinum</span>.txt <span class="nt">-m</span> roimask_<span class="nv">$roinum</span> 
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/roimask_<span class="nv">$roinum</span>.nii.gz
+<span class="k">done</span> 
+<span class="c"># Combine time series</span>
+<span class="nb">paste</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/ts_<span class="k">*</span>.txt <span class="o">&gt;</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/results/nat/tseries_cort_lh.txt
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/ts_<span class="k">*</span>
+
+
+<span class="c">############################################################</span>
+<span class="c"># Right hemisphere</span>
+<span class="c"># Loop through ROIs:</span>
+<span class="k">for </span>roinum <span class="k">in </span>0<span class="o">{</span>0..9<span class="o">}</span> <span class="o">{</span>10..47<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
+<span class="c"># Extract ROI from atlas:</span>
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
+<span class="c"># Threshold probabilistic ROI mask:</span>
+fslmaths roimask_<span class="nv">$roinum</span> <span class="nt">-thr</span> 50 <span class="nt">-bin</span> <span class="nt">-mas</span> rightCortex roimask_<span class="nv">$roinum</span> 
+<span class="c"># Extract ROI mean time series:</span>
+fslmeants <span class="nt">-i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_BOLD.nii.gz <span class="nt">-o</span> ts_<span class="nv">$roinum</span>.txt <span class="nt">-m</span> roimask_<span class="nv">$roinum</span> 
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/roimask_<span class="nv">$roinum</span>.nii.gz
+<span class="k">done</span> 
+<span class="c"># Combine time series</span>
+<span class="nb">paste</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/ts_<span class="k">*</span>.txt <span class="o">&gt;</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/results/nat/tseries_cort_rh.txt
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/ts_<span class="k">*</span>
+</code></pre></div></div>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">############################################################</span>
+<span class="c"># Subcortical structures</span>
+<span class="nb">export </span><span class="nv">atlas_subc</span><span class="o">=</span>/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-sub-prob-2mm.nii.gz
+applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_subc</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
+ <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc <span class="nt">--interp</span><span class="o">=</span>nn
+<span class="c">############################################################</span>
+<span class="c"># Loop through ROIs:</span>
+<span class="k">for </span>roinum <span class="k">in </span>0<span class="o">{</span>0..9<span class="o">}</span> <span class="o">{</span>10..20<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
+<span class="c"># Extract ROI from atlas:</span>
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
+<span class="c"># Threshold probabilistic ROI mask:</span>
+fslmaths roimask_<span class="nv">$roinum</span> <span class="nt">-thr</span> 50 <span class="nt">-bin</span> roimask_<span class="nv">$roinum</span> 
+<span class="c"># Extract ROI mean time series:</span>
+fslmeants <span class="nt">-i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_BOLD.nii.gz <span class="nt">-o</span> ts_<span class="nv">$roinum</span>.txt <span class="nt">-m</span> roimask_<span class="nv">$roinum</span> 
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/roimask_<span class="nv">$roinum</span>.nii.gz
+<span class="k">done</span>
+<span class="c"># Combine time series</span>
+<span class="nb">paste</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/ts_<span class="k">*</span>.txt <span class="o">&gt;</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/results/nat/tseries_subc.txt
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/ts_<span class="k">*</span>
+</code></pre></div></div>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">############################################################</span>
+<span class="c"># Thalamic  subfields</span>
+<span class="c">############################################################</span>
+<span class="nb">export </span><span class="nv">atlas_thal</span><span class="o">=</span>/usr/local/fsl/data/atlases/Thalamus/Thalamus-prob-2mm.nii.gz
+applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_thal</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
+ <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_thal <span class="nt">--interp</span><span class="o">=</span>nn
+<span class="c">############################################################</span>
+<span class="c"># Loop through ROIs:</span>
+<span class="k">for </span>roinum <span class="k">in </span>0<span class="o">{</span>0..6<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
+<span class="c"># Extract ROI from atlas:</span>
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_thal roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
+<span class="c"># Threshold probabilistic ROI mask:</span>
+fslmaths roimask_<span class="nv">$roinum</span> <span class="nt">-thr</span> 50 <span class="nt">-bin</span> roimask_<span class="nv">$roinum</span> 
+<span class="c"># Extract ROI mean time series:</span>
+fslmeants <span class="nt">-i</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_BOLD.nii.gz <span class="nt">-o</span> ts_<span class="nv">$roinum</span>.txt <span class="nt">-m</span> roimask_<span class="nv">$roinum</span> 
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/roimask_<span class="nv">$roinum</span>.nii.gz
+<span class="k">done</span>
+<span class="c"># Combine time series</span>
+<span class="nb">paste</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/ts_<span class="k">*</span>.txt <span class="o">&gt;</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/results/nat/tseries_thal.txt
+<span class="nb">rm</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/ts_<span class="k">*</span>
+</code></pre></div></div>
+
+<hr />
+
+<p><a name="11"></a></p>
+
+<h2 id="11--create-mgz-files-with-surface-node-x-roi-parameter-and-time-series"><strong>11.-</strong> Create .MGZ files with surface-node X ROI parameter and time series</h2>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">subjnum</span><span class="o">=</span>15
+
+<span class="nb">mkdir</span> <span class="k">${</span><span class="nv">data_folder</span><span class="k">}</span>/S<span class="nv">$subjnum</span>/fsurf
+<span class="nb">export </span><span class="nv">pth</span><span class="o">=</span><span class="k">${</span><span class="nv">data_folder</span><span class="k">}</span>/S<span class="nv">$subjnum</span>
+<span class="nb">cd</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf
+<span class="nb">export </span><span class="nv">cond</span><span class="o">=</span>01
+<span class="nb">export </span><span class="nv">input</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/func_run<span class="nv">$cond</span>
+
+<span class="nb">cp</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>_denoised.nii.gz <span class="k">${</span><span class="nv">input</span><span class="k">}</span>.nii.gz
+
+fslswapdim <span class="k">${</span><span class="nv">input</span><span class="k">}</span>.nii.gz x <span class="nt">-z</span> y <span class="k">${</span><span class="nv">input</span><span class="k">}</span>.nii.gz
+fslmaths <span class="k">${</span><span class="nv">input</span><span class="k">}</span>.nii.gz <span class="nt">-Tmean</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_mean.nii.gz
+
+<span class="c">##########################################################################################</span>
+<span class="c"># Iterative alignment with bbregister and tkregister</span>
+<span class="c">##########################################################################################</span>
+<span class="c"># Start from header (if lucky) or from FLIRT or mri_coreg alignment:</span>
+
+mri_coreg <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_mean.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.lta <span class="nt">--debug</span>
+
+<span class="c"># Check results:</span>
+<span class="c"># tkregisterfv --mov ${input}_mean.nii.gz --targ $FREESURFER_HOME/subjects/S${subjnum}/mri/brainmask.mgz --reg ${pth}/fsurf/tkreg_run$cond.lta --s S${subjnum}  --surfs</span>
+
+<span class="c"># Boundary based registration (based on segmentation):</span>
+
+bbregister <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_mean.nii.gz <span class="nt">--bold</span> <span class="nt">--init-reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.lta <span class="se">\</span>
+ <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.dat <span class="nt">--fslmat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/fsT2toT1_run<span class="nv">$cond</span>.mat <span class="nt">--wm-proj-abs</span> 2 
+
+<span class="c"># Check:</span>
+<span class="c"># tkregisterfv --mov ${input}_mean.nii.gz --reg ${pth}/fsurf/tkreg_run$cond.dat --surfs </span>
+
+<span class="c"># Awesome! and can be improved my hand and also iterating.</span>
+
+<span class="c"># Obtain registered T2 by writing alignment to header</span>
+mri_vol2vol <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.dat <span class="nt">--o</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--trilin</span> <span class="nt">--fstarg</span> <span class="nt">--no-resample</span>
+
+<span class="c"># Check results:</span>
+<span class="c"># tkregisterfv --mov ${input}_mean.nii.gz --targ $FREESURFER_HOME/subjects/S${subjnum}/mri/orig.mgz \</span>
+
+<span class="c">## Interpolate functional to anatomical surface (similar to_freesurfer.py)</span>
+<span class="nb">export </span><span class="nv">method</span><span class="o">=</span>trilinear
+<span class="nb">export </span><span class="nv">hemis</span><span class="o">=</span>lh
+mri_vol2surf <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--srcreg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.dat <span class="nt">--hemi</span> <span class="k">${</span><span class="nv">hemis</span><span class="k">}</span> <span class="nt">--cortex</span> <span class="se">\</span>
+<span class="nt">--out</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg_func2surf_<span class="k">${</span><span class="nv">hemis</span><span class="k">}</span>.mgz <span class="nt">--interp</span> <span class="k">${</span><span class="nv">method</span><span class="k">}</span> <span class="nt">--projfrac</span> 0.5
+<span class="nb">export </span><span class="nv">hemis</span><span class="o">=</span>rh
+mri_vol2surf <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--srcreg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.dat <span class="nt">--hemi</span> <span class="k">${</span><span class="nv">hemis</span><span class="k">}</span> <span class="nt">--cortex</span> <span class="se">\</span>
+<span class="nt">--out</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg_func2surf_<span class="k">${</span><span class="nv">hemis</span><span class="k">}</span>.mgz <span class="nt">--interp</span> <span class="k">${</span><span class="nv">method</span><span class="k">}</span> <span class="nt">--projfrac</span> 0.5
+</code></pre></div></div>
+
+<hr />
+
+<p><a name="12"></a></p>
+
+<h2 id="12--project-data-to-the-cortical-surface-reconstruction"><strong>12.-</strong> Project data to the cortical surface reconstruction</h2>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># # Interrogate interpolated time series in the cortical surface</span>
+<span class="c"># freeview \</span>
+<span class="c"># -f $FREESURFER_HOME/subjects/S${subjnum}/surf/lh.inflated:overlay=${input}_reg_func2surf_lh.mgz \</span>
+<span class="c"># -f $FREESURFER_HOME/subjects/S${subjnum}/surf/rh.inflated:overlay=${input}_reg_func2surf_rh.mgz</span>
+
+<span class="c"># freeview -f "$SUBJECTS_DIR"/S${subjnum}/surf/${hemis}.inflated</span>
+<span class="nb">export </span><span class="nv">subjnum</span><span class="o">=</span>15
+<span class="nb">export </span><span class="nv">hemis</span><span class="o">=</span>lh
+freeview <span class="nt">-f</span> <span class="nv">$FREESURFER_HOME</span>/subjects/S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span>/surf/<span class="k">${</span><span class="nv">hemis</span><span class="k">}</span>.inflated
+</code></pre></div></div>
+
+<p><img src="/fMRI-barebones/assets/benson.png" alt="Picture" height="320px" width="320px" /><img src="/fMRI-barebones/assets/wang.png" alt="Picture" height="320px" width="320px" /></p>
+
+<p><a name="13"></a></p>
+
+<h2 id="13--import-freesurfer-data-in-pycortex"><strong>13.-</strong> Import Freesurfer data in Pycortex</h2>
+
+<hr />
+
+<p><a name="14"></a></p>
+
+<h2 id="14--compute-cortical-geodesic-distances-in-millimeters-using-pycortex"><strong>14.-</strong> Compute cortical (geodesic) distances in millimeters using Pycortex</h2>
+
+<hr />
+
+<p><a name="15"></a></p>
+
+<h2 id="15--load-data-in-matlab-and-python"><strong>15.-</strong> Load data in Matlab and Python</h2>
+
+<hr />
+
 
 
 </div>
+
   
   </body>
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-68063749-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+   <!--    -->
+
+      <!--    -->
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = 'nicogravel';
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+<div class="wrapper">
+
+   <!--    -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col  footer-col-1">
+        <ul class="contact-list">
+       
+       </ul>
+      </div>
+
+      <div class="footer-col  footer-col-2">
+        <ul class="social-media-list">
+          <!--  -->
+          <li>
+            <a href="https://github.com/nicogravel">
+              <span class="icon  icon--github">
+                <svg viewBox="0 0 16 16">
+                  <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+              </span>
+
+            </a>
+          </li>
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col  footer-col-3">
+        <p class="text">"My interest in science is to simply find out about the world" — Richard Feynman
+</p>
+      </div>
+    </div>
+
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-68063749-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
 
 </html>
