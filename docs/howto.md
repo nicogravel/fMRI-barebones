@@ -16,8 +16,8 @@ title: "fMRI-barebones"
 4. [Skull stripping using FSL (optional)](/fMRI-barebones/howto.html#4)
 5. [Linear registration to standard space using FSL](/fMRI-barebones/howto.html#5)
 6. [Non-linear registration to standard space using FSL](/fMRI-barebones/howto.html#6)
-7. [Functional to structural co-registration using Freesurfer](/fMRI-barebones/howto.html#7)
-8. [Functional to structural co-registration using FSL (optional)](/fMRI-barebones/howto.html#8)
+7. [Functional to structural co-registration using FSL](/fMRI-barebones/howto.html#7)
+8. [Functional to structural co-registration using Freesurfer (optional)](/fMRI-barebones/howto.html#8)
 9. [Remove motion artifacts using ICA-AROMA](/fMRI-barebones/howto.html#9)
 10. [Obtain BOLD time series from ROIs in FSL atlases](/fMRI-barebones/howto.html#10)
 11. [Create .MGZ files with surface-node X ROI parameter/time series](/fMRI-barebones/howto.html#11)
@@ -201,7 +201,7 @@ applywarp -i ${pth}/anat/brain -r $FSLDIR/data/standard/MNI152_T1_2mm_brain.nii.
 
 <a name="7"></a>
 
-## **7.-** Functional to structural co-registration using Freesurfer
+## **7.-** Functional to structural co-registration using FSL
 
 ```shell
 export FREESURFER_HOME=/Applications/freesurfer
@@ -214,6 +214,7 @@ export pth=${data_folder}/${subjid}
 
 export file=rest_YYYYMMDD_01.nii
 export scan=run01
+export cond=01
 
 # Reorient functional volumes:
 
@@ -240,13 +241,8 @@ rm ${pth}/func/temp
 fslmaths ${pth}/func/${scan} -Tmean ${pth}/func/${scan}_mean
 bet ${pth}/func/${scan}_mean ${pth}/func/${scan}_brain -f 0.3 -n -m -R 
 
-
-# Functional to structural co-registration using Freesurfer's mri_coreg  and bbregister:
-
-mri_coreg --s S${subjnum} --mov ${pth}/func/${scan}_mean.nii.gz --reg ${pth}/reg/tkreg_run$cond.lta --debug
-
-bbregister --s S${subjnum} --mov ${pth}/func/${scan}_mean.nii.gz --bold --init-reg ${pth}/reg/tkreg_run$cond.lta \
---fslmat ${pth}/reg/T2toT1_${scan}.mat --reg ${pth}/reg/fsT2toT1_${scan}.dat --wm-proj-abs 2 #--frame frameno --o ${pth}/fsurf/regtest.nii.gz 
+epi_reg --epi=${pth}/func/${scan}_mean.nii.gz --t1=${pth}/anat/${struct}.nii.gz \
+--t1brain=${pth}/anat/brain.nii.gz --out=${pth}/reg/T2toT1_${scan}
 
 # Obtain a struct2func transform by inverting the func2struct transform:
 convert_xfm -omat ${pth}/reg/T1toT2_${scan}.mat -inverse ${pth}/reg/T2toT1_${scan}.mat
@@ -257,13 +253,20 @@ convert_xfm -omat ${pth}/reg/T1toT2_${scan}.mat -inverse ${pth}/reg/T2toT1_${sca
 <a name="8"></a>
 
 
-##  **8.-** Functional to structural co-registration using FSL (optional)
+##  **8.-** Functional to structural co-registration using Freesurfer (optional)
 
-Replace mri_coreg  and bbregister in the previous snippet by:
+Replace FSL's epi_reg by Freesurfer's mri_coreg and bbregister in the previous snippet by:
 
 ```shell
-epi_reg --epi=${pth}/func/${scan}_mean.nii.gz --t1=${pth}/anat/${struct}.nii.gz \
---t1brain=${pth}/anat/brain.nii.gz --out=${pth}/reg/T2toT1_${scan}
+# Functional to structural co-registration using Freesurfer's mri_coreg  and bbregister:
+
+mri_coreg --s S${subjnum} --mov ${pth}/func/${scan}_mean.nii.gz --reg ${pth}/reg/tkreg_run${cond}.lta --debug
+
+bbregister --s S${subjnum} --mov ${pth}/func/${scan}_mean.nii.gz --bold --init-fsl \
+--fslmat ${pth}/reg/fsT2toT1_${scan}.mat --reg ${pth}/reg/fsT2toT1_${scan}.dat --wm-proj-abs 2 
+
+# Obtain a struct2func transform by inverting the func2struct transform:
+convert_xfm -omat ${pth}/reg/fsT1toT2_${scan}.mat -inverse ${pth}/reg/fsT2toT1_${scan}.mat
 ```
 
 ---
@@ -312,6 +315,9 @@ fsl_regfilt -i ${pth}/func/${scan}.nii.gz -d ${pth}/mc/ica_aroma_${scan}/melodic
 
 # Check results:
 #fsleyes ${pth}/func/${scan}.nii.gz ${pth}/mc/${scan}_denoised.nii.gz
+
+# flirt -in ${pth}/mc/${scan}_denoised.nii.gz -ref ${pth}/anat/${struct}.nii.gz -out ${pth}/mc/${scan}_denoised_reg.nii.gz -init ${pth}/reg/T2toT1_${scan}.mat  -applyxfm4D 
+
 ```
 
 ---
@@ -329,6 +335,7 @@ The following is the Harvard-Oxford subcortical atlas overlaid on top of the str
 ```shell
 mkdir ${pth}/results
 mkdir ${pth}/results/nat
+
 invwarp --ref=${pth}/anat/${struct}.nii.gz \
 --warp=${pth}/reg/T1toMNI_warp --out=${pth}/reg/MNItoT1_warp
 
@@ -342,15 +349,20 @@ fslmaths ${pth}/mc/${scan}_denoised.nii.gz -div ${pth}/mc/${scan}_baseline -mul 
 # Create mask for left and right hemispheres
 ##########################################################################################
 export atlas_subc=/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-sub-prob-2mm.nii.gz
-applywarp -i ${atlas_subc} -r ${pth}/mc/${scan}_baseline --postmat=${pth}/reg/T1toT2_${scan}.mat \
+
+fslroi ${pth}/func/${scan} ${pth}/func/${scan}_1stvol 0 1
+
+
+applywarp -i ${atlas_subc} -r ${pth}/func/${scan}_mean --postmat=${pth}/reg/T1toT2_${scan}.mat \
  -w ${pth}/reg/MNItoT1_warp -o ${pth}/atlas_subc_nat --interp=nn
+
 ############################################################
 # Extract masks for left and right cortical hemispheres:
 fslroi ${pth}/atlas_subc_nat leftCortex 01 1 # Left gray matter
-fslmaths leftCortex -thr 50 leftCortex
+fslmaths leftCortex -thr 20 leftCortex
 fslmaths leftCortex -bin leftCortex
 fslroi ${pth}/atlas_subc_nat rightCortex 12 1 # Right gray matter
-fslmaths rightCortex -thr 50 rightCortex
+fslmaths rightCortex -thr 20 rightCortex
 fslmaths rightCortex -bin rightCortex
 ```
 
@@ -359,15 +371,14 @@ fslmaths rightCortex -bin rightCortex
 # Oxford-Harvard cortical and subcortical atlases:
 ############################################################
 export atlas_cort=/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-cort-prob-2mm.nii.gz
-applywarp -i ${atlas_cort} -r ${pth}/mc/${scan}_baseline --postmat=${pth}/reg/T1toT2_${scan}.mat \
- -w ${pth}/reg/MNItoT1_warp -o ${pth}/atlas_cort --interp=nn
+applywarp -i ${atlas_cort} -r ${pth}/func/${scan}_mean --postmat=${pth}/reg/T1toT2_${scan}.mat -w ${pth}/reg/MNItoT1_warp -o ${pth}/atlas_cort_nat --interp=nn
 
 ############################################################
 # Left hemisphere
 # Loop through ROIs:
 for roinum in 0{0..9} {10..47}; do
 # Extract ROI from atlas:
-fslroi ${pth}/atlas_cort roimask_$roinum $roinum 1
+fslroi ${pth}/atlas_cort_nat roimask_$roinum $roinum 1
 # Threshold probabilistic ROI mask:
 fslmaths roimask_$roinum -thr 50 -bin -mas leftCortex roimask_$roinum 
 # Extract ROI mean time series:
@@ -384,7 +395,7 @@ rm ${pth}/ts_*
 # Loop through ROIs:
 for roinum in 0{0..9} {10..47}; do
 # Extract ROI from atlas:
-fslroi ${pth}/atlas_cort roimask_$roinum $roinum 1
+fslroi ${pth}/atlas_cort_nat roimask_$roinum $roinum 1
 # Threshold probabilistic ROI mask:
 fslmaths roimask_$roinum -thr 50 -bin -mas rightCortex roimask_$roinum 
 # Extract ROI mean time series:
@@ -399,14 +410,11 @@ rm ${pth}/ts_*
 ```shell
 ############################################################
 # Subcortical structures
-export atlas_subc=/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-sub-prob-2mm.nii.gz
-applywarp -i ${atlas_subc} -r ${pth}/mc/${scan}_baseline --postmat=${pth}/reg/T1toT2_${scan}.mat \
- -w ${pth}/reg/MNItoT1_warp -o ${pth}/atlas_subc --interp=nn
 ############################################################
 # Loop through ROIs:
 for roinum in 0{0..9} {10..20}; do
 # Extract ROI from atlas:
-fslroi ${pth}/atlas_subc roimask_$roinum $roinum 1
+fslroi ${pth}/atlas_subc_nat roimask_$roinum $roinum 1
 # Threshold probabilistic ROI mask:
 fslmaths roimask_$roinum -thr 50 -bin roimask_$roinum 
 # Extract ROI mean time series:
@@ -423,13 +431,13 @@ rm ${pth}/ts_*
 # Thalamic  subfields
 ############################################################
 export atlas_thal=/usr/local/fsl/data/atlases/Thalamus/Thalamus-prob-2mm.nii.gz
-applywarp -i ${atlas_thal} -r ${pth}/mc/${scan}_baseline --postmat=${pth}/reg/T1toT2_${scan}.mat \
- -w ${pth}/reg/MNItoT1_warp -o ${pth}/atlas_thal --interp=nn
+applywarp -i ${atlas_thal} -r ${pth}/func/${scan}_mean --postmat=${pth}/reg/T1toT2_${scan}.mat \
+ -w ${pth}/reg/MNItoT1_warp -o ${pth}/atlas_thal_nat --interp=nn
 ############################################################
 # Loop through ROIs:
 for roinum in 0{0..6}; do
 # Extract ROI from atlas:
-fslroi ${pth}/atlas_thal roimask_$roinum $roinum 1
+fslroi ${pth}/atlas_thal_nat roimask_$roinum $roinum 1
 # Threshold probabilistic ROI mask:
 fslmaths roimask_$roinum -thr 50 -bin roimask_$roinum 
 # Extract ROI mean time series:
@@ -467,23 +475,23 @@ fslmaths ${input}.nii.gz -Tmean ${input}_mean.nii.gz
 ##########################################################################################
 # Start from header (if lucky) or from FLIRT or mri_coreg alignment:
 
-mri_coreg --s S${subjnum} --mov ${input}_mean.nii.gz --reg ${pth}/fsurf/tkreg_run$cond.lta --debug
+mri_coreg --s S${subjnum} --mov ${input}_mean.nii.gz --reg ${pth}/fsurf/tkreg_run${cond}.lta --debug
 
 # Check results:
-# tkregisterfv --mov ${input}_mean.nii.gz --targ $FREESURFER_HOME/subjects/S${subjnum}/mri/brainmask.mgz --reg ${pth}/fsurf/tkreg_run$cond.lta --s S${subjnum}  --surfs
+# tkregisterfv --mov ${input}_mean.nii.gz --targ $FREESURFER_HOME/subjects/S${subjnum}/mri/brainmask.mgz --reg ${pth}/fsurf/tkreg_run${cond}.lta --s S${subjnum}  --surfs
 
 # Boundary based registration (based on segmentation):
 
-bbregister --s S${subjnum} --mov ${input}_mean.nii.gz --bold --init-reg ${pth}/fsurf/tkreg_run$cond.lta \
- --reg ${pth}/fsurf/tkreg_run$cond.dat --fslmat ${pth}/fsurf/fsT2toT1_run$cond.mat --wm-proj-abs 2 
+bbregister --s S${subjnum} --mov ${input}_mean.nii.gz --bold --init-reg ${pth}/fsurf/tkreg_run${cond}.lta \
+ --reg ${pth}/fsurf/tkreg_run${cond}.dat --fslmat ${pth}/fsurf/fsT2toT1_run${cond}.mat --wm-proj-abs 2 
 
 # Check:
-# tkregisterfv --mov ${input}_mean.nii.gz --reg ${pth}/fsurf/tkreg_run$cond.dat --surfs 
+# tkregisterfv --mov ${input}_mean.nii.gz --reg ${pth}/fsurf/tkreg_run${cond}.dat --surfs 
 
 # Awesome! and can be improved my hand and also iterating.
 
 # Obtain registered T2 by writing alignment to header
-mri_vol2vol --mov ${input}.nii.gz --reg ${pth}/fsurf/tkreg_run$cond.dat --o ${input}_reg.nii.gz --trilin --fstarg --no-resample
+mri_vol2vol --mov ${input}.nii.gz --reg ${pth}/fsurf/tkreg_run${cond}.dat --o ${input}_reg.nii.gz --trilin --fstarg --no-resample
 
 # Check results:
 # tkregisterfv --mov ${input}_mean.nii.gz --targ $FREESURFER_HOME/subjects/S${subjnum}/mri/orig.mgz \
@@ -491,10 +499,10 @@ mri_vol2vol --mov ${input}.nii.gz --reg ${pth}/fsurf/tkreg_run$cond.dat --o ${in
 ## Interpolate functional to anatomical surface (similar to_freesurfer.py)
 export method=trilinear
 export hemis=lh
-mri_vol2surf --mov ${input}_reg.nii.gz --srcreg ${pth}/fsurf/tkreg_run$cond.dat --hemi ${hemis} --cortex \
+mri_vol2surf --mov ${input}_reg.nii.gz --srcreg ${pth}/fsurf/tkreg_run${cond}.dat --hemi ${hemis} --cortex \
 --out ${input}_reg_func2surf_${hemis}.mgz --interp ${method} --projfrac 0.5
 export hemis=rh
-mri_vol2surf --mov ${input}_reg.nii.gz --srcreg ${pth}/fsurf/tkreg_run$cond.dat --hemi ${hemis} --cortex \
+mri_vol2surf --mov ${input}_reg.nii.gz --srcreg ${pth}/fsurf/tkreg_run${cond}.dat --hemi ${hemis} --cortex \
 --out ${input}_reg_func2surf_${hemis}.mgz --interp ${method} --projfrac 0.5
 ```
 

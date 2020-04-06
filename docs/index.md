@@ -19,8 +19,8 @@ A simple yet useful preprocessing pipeline for fMRI data using [FSL](https://fsl
 4. [Skull stripping using FSL (optional)](/fMRI-barebones/howto.html#4)
 5. [Linear registration to standard space using FSL](/fMRI-barebones/howto.html#5)
 6. [Non-linear registration to standard space using FSL](/fMRI-barebones/howto.html#6)
-7. [Functional to structural co-registration using Freesurfer](/fMRI-barebones/howto.html#7)
-8. [Functional to structural co-registration using FSL (optional)](/fMRI-barebones/howto.html#8)
+7. [Functional to structural co-registration using FSL](/fMRI-barebones/howto.html#7)
+8. [Functional to structural co-registration using Freesurfer (optional)](/fMRI-barebones/howto.html#8)
 9. [Remove motion artifacts using ICA-AROMA](/fMRI-barebones/howto.html#9)
 10. [Obtain BOLD time series from ROIs in FSL atlases](/fMRI-barebones/howto.html#10)
 11. [Create .MGZ files with surface-node X ROI parameter/time series](/fMRI-barebones/howto.html#11)
@@ -28,4 +28,6 @@ A simple yet useful preprocessing pipeline for fMRI data using [FSL](https://fsl
 13. [Import Freesurfer data into Pycortex](/fMRI-barebones/howto.html#13)
 14. [Compute cortical (geodesic) distances in millimeters using Pycortex](/fMRI-barebones/howto.html#14)
 15. [Load data in Matlab and Python](/fMRI-barebones/howto.html#15)
+
+
 
