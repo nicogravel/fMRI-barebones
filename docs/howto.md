@@ -6,9 +6,6 @@ title: "fMRI-barebones"
 
 # fMRI-barebones **tutorial** 
 
-![cort](/fMRI-barebones/assets/HOatlas.png)
-
-
 ---
 
 ### Contents:
@@ -324,7 +321,7 @@ fsl_regfilt -i ${pth}/func/${scan}.nii.gz -d ${pth}/mc/ica_aroma_${scan}/melodic
 
 ## **10.-** Obtain BOLD time series from ROIs in FSL atlases 
 
-The following is the Harvard-Oxford subcortical atlas overlaid on top of the structural data of one subject: 
+The following is the Harvard-Oxford subcortical atlas overlaid on top of the structural data of a single subject: 
 
 ![subc](/fMRI-barebones/assets/subc.png)
 
