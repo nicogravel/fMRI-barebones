@@ -2,42 +2,43 @@
 <html>
   <head>
     <title>fMRI-barebones</title>
-    <link rel="stylesheet" type="text/css" href="/fMRI-barebones/css/main.css">  
-    </head>
+        <link rel="stylesheet" type="text/css" href="/fMRI-barebones/css/main.css">   
+        
+  </head>
 
 
-  <body>
-    <nav>
+  <header>
+   <nav>
 <ul>
 <li><a href="/fMRI-barebones/index.html">Home</a></li>
 </ul>
     </nav>
+  <header>
+
+  <body>
 <div class="container">
-
   <h1 id="fmri-barebones-tutorial">fMRI-barebones <strong>tutorial</strong></h1>
-
-<p><img src="/fMRI-barebones/assets/HOatlas.png" alt="cort" /></p>
 
 <hr />
 
 <h3 id="contents">Contents:</h3>
 
 <ol>
-  <li><a href="/fMRI-barebones/howto.html#1">Setup</a></li>
+  <li><a href="/fMRI-barebones/howto.html">Setup</a></li>
   <li><a href="/fMRI-barebones/howto.html#2">Cortical surface reconstruction using Freesurfer</a></li>
   <li><a href="/fMRI-barebones/howto.html#3">Obtain Freesurfer retinotopic templates and atlases for cortical visual regions using Neuropythy</a></li>
   <li><a href="/fMRI-barebones/howto.html#4">Skull stripping using FSL (optional)</a></li>
   <li><a href="/fMRI-barebones/howto.html#5">Linear registration to standard space using FSL</a></li>
   <li><a href="/fMRI-barebones/howto.html#6">Non-linear registration to standard space using FSL</a></li>
-  <li><a href="/fMRI-barebones/howto.html#7">Functional to structural co-registration using Freesurfer</a></li>
-  <li><a href="/fMRI-barebones/howto.html#8">Functional to structural co-registration using FSL (optional)</a></li>
+  <li><a href="/fMRI-barebones/howto.html#7">Functional to structural co-registration using FSL</a></li>
+  <li><a href="/fMRI-barebones/howto.html#8">Functional to structural co-registration using Freesurfer (optional)</a></li>
   <li><a href="/fMRI-barebones/howto.html#9">Remove motion artifacts using ICA-AROMA</a></li>
   <li><a href="/fMRI-barebones/howto.html#10">Obtain BOLD time series from ROIs in FSL atlases</a></li>
   <li><a href="/fMRI-barebones/howto.html#11">Create .MGZ files with surface-node X ROI parameter/time series</a></li>
   <li><a href="/fMRI-barebones/howto.html#12">Project data to the cortical surface reconstruction</a></li>
   <li><a href="/fMRI-barebones/howto.html#13">Import Freesurfer data into Pycortex</a></li>
   <li><a href="/fMRI-barebones/howto.html#14">Compute cortical (geodesic) distances in millimeters using Pycortex</a></li>
-  <li><a href="/fMRI-barebones/howto.html#15">Load data in Matlab and Python</a></li>
+  <li><a href="/fMRI-barebones/howto.html#15">Load data in Python</a></li>
 </ol>
 
 <hr />
@@ -199,7 +200,7 @@ fnirt <span class="nt">--in</span><span class="o">=</span><span class="k">${</sp
 
 <p><a name="7"></a></p>
 
-<h2 id="7--functional-to-structural-co-registration-using-freesurfer"><strong>7.-</strong> Functional to structural co-registration using Freesurfer</h2>
+<h2 id="7--functional-to-structural-co-registration-using-fsl"><strong>7.-</strong> Functional to structural co-registration using FSL</h2>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">FREESURFER_HOME</span><span class="o">=</span>/Applications/freesurfer
 <span class="nb">source</span> <span class="nv">$FREESURFER_HOME</span>/SetUpFreeSurfer.sh
@@ -211,6 +212,7 @@ fnirt <span class="nt">--in</span><span class="o">=</span><span class="k">${</sp
 
 <span class="nb">export </span><span class="nv">file</span><span class="o">=</span>rest_YYYYMMDD_01.nii
 <span class="nb">export </span><span class="nv">scan</span><span class="o">=</span>run01
+<span class="nb">export </span><span class="nv">cond</span><span class="o">=</span>01
 
 <span class="c"># Reorient functional volumes:</span>
 
@@ -237,13 +239,8 @@ fsl_motion_outliers <span class="nt">-i</span> <span class="k">${</span><span cl
 fslmaths <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="nt">-Tmean</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean
 bet <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_brain <span class="nt">-f</span> 0.3 <span class="nt">-n</span> <span class="nt">-m</span> <span class="nt">-R</span> 
 
-
-<span class="c"># Functional to structural co-registration using Freesurfer's mri_coreg  and bbregister:</span>
-
-mri_coreg <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/tkreg_run<span class="nv">$cond</span>.lta <span class="nt">--debug</span>
-
-bbregister <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--bold</span> <span class="nt">--init-reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/tkreg_run<span class="nv">$cond</span>.lta <span class="se">\</span>
-<span class="nt">--fslmat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/fsT2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.dat <span class="nt">--wm-proj-abs</span> 2 <span class="c">#--frame frameno --o ${pth}/fsurf/regtest.nii.gz </span>
+epi_reg <span class="nt">--epi</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--t1</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/<span class="k">${</span><span class="nv">struct</span><span class="k">}</span>.nii.gz <span class="se">\</span>
+<span class="nt">--t1brain</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain.nii.gz <span class="nt">--out</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>
 
 <span class="c"># Obtain a struct2func transform by inverting the func2struct transform:</span>
 convert_xfm <span class="nt">-omat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="nt">-inverse</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat
@@ -253,12 +250,19 @@ convert_xfm <span class="nt">-omat</span> <span class="k">${</span><span class="
 
 <p><a name="8"></a></p>
 
-<h2 id="8--functional-to-structural-co-registration-using-fsl-optional"><strong>8.-</strong> Functional to structural co-registration using FSL (optional)</h2>
+<h2 id="8--functional-to-structural-co-registration-using-freesurfer-optional"><strong>8.-</strong> Functional to structural co-registration using Freesurfer (optional)</h2>
 
-<p>Replace mri_coreg  and bbregister in the previous snippet by:</p>
+<p>Replace FSL’s epi_reg by Freesurfer’s mri_coreg and bbregister in the previous snippet by:</p>
 
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>epi_reg <span class="nt">--epi</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--t1</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/<span class="k">${</span><span class="nv">struct</span><span class="k">}</span>.nii.gz <span class="se">\</span>
-<span class="nt">--t1brain</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/brain.nii.gz <span class="nt">--out</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Functional to structural co-registration using Freesurfer's mri_coreg  and bbregister:</span>
+
+mri_coreg <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/tkreg_run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>.lta <span class="nt">--debug</span>
+
+bbregister <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean.nii.gz <span class="nt">--bold</span> <span class="nt">--init-fsl</span> <span class="se">\</span>
+<span class="nt">--fslmat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/fsT2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/fsT2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.dat <span class="nt">--wm-proj-abs</span> 2 
+
+<span class="c"># Obtain a struct2func transform by inverting the func2struct transform:</span>
+convert_xfm <span class="nt">-omat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/fsT1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="nt">-inverse</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/fsT2toT1_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat
 </code></pre></div></div>
 
 <hr />
@@ -306,6 +310,9 @@ fsl_regfilt <span class="nt">-i</span> <span class="k">${</span><span class="nv"
 
 <span class="c"># Check results:</span>
 <span class="c">#fsleyes ${pth}/func/${scan}.nii.gz ${pth}/mc/${scan}_denoised.nii.gz</span>
+
+<span class="c"># flirt -in ${pth}/mc/${scan}_denoised.nii.gz -ref ${pth}/anat/${struct}.nii.gz -out ${pth}/mc/${scan}_denoised_reg.nii.gz -init ${pth}/reg/T2toT1_${scan}.mat  -applyxfm4D </span>
+
 </code></pre></div></div>
 
 <hr />
@@ -314,12 +321,13 @@ fsl_regfilt <span class="nt">-i</span> <span class="k">${</span><span class="nv"
 
 <h2 id="10--obtain-bold-time-series-from-rois-in-fsl-atlases"><strong>10.-</strong> Obtain BOLD time series from ROIs in FSL atlases</h2>
 
-<p>The following is the Harvard-Oxford subcortical atlas overlaid on top of the structural data of one subject:</p>
+<p>The following is the Harvard-Oxford subcortical atlas overlaid on top of the structural data of a single subject:</p>
 
 <p><img src="/fMRI-barebones/assets/subc.png" alt="subc" /></p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/results
 <span class="nb">mkdir</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/results/nat
+
 invwarp <span class="nt">--ref</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/anat/<span class="k">${</span><span class="nv">struct</span><span class="k">}</span>.nii.gz <span class="se">\</span>
 <span class="nt">--warp</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toMNI_warp <span class="nt">--out</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp
 
@@ -333,15 +341,20 @@ fslmaths <span class="k">${</span><span class="nv">pth</span><span class="k">}</
 <span class="c"># Create mask for left and right hemispheres</span>
 <span class="c">##########################################################################################</span>
 <span class="nb">export </span><span class="nv">atlas_subc</span><span class="o">=</span>/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-sub-prob-2mm.nii.gz
-applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_subc</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
+
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_1stvol 0 1
+
+
+applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_subc</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
  <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc_nat <span class="nt">--interp</span><span class="o">=</span>nn
+
 <span class="c">############################################################</span>
 <span class="c"># Extract masks for left and right cortical hemispheres:</span>
 fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc_nat leftCortex 01 1 <span class="c"># Left gray matter</span>
-fslmaths leftCortex <span class="nt">-thr</span> 50 leftCortex
+fslmaths leftCortex <span class="nt">-thr</span> 20 leftCortex
 fslmaths leftCortex <span class="nt">-bin</span> leftCortex
 fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc_nat rightCortex 12 1 <span class="c"># Right gray matter</span>
-fslmaths rightCortex <span class="nt">-thr</span> 50 rightCortex
+fslmaths rightCortex <span class="nt">-thr</span> 20 rightCortex
 fslmaths rightCortex <span class="nt">-bin</span> rightCortex
 </code></pre></div></div>
 
@@ -349,15 +362,14 @@ fslmaths rightCortex <span class="nt">-bin</span> rightCortex
 <span class="c"># Oxford-Harvard cortical and subcortical atlases:</span>
 <span class="c">############################################################</span>
 <span class="nb">export </span><span class="nv">atlas_cort</span><span class="o">=</span>/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-cort-prob-2mm.nii.gz
-applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_cort</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
- <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort <span class="nt">--interp</span><span class="o">=</span>nn
+applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_cort</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort_nat <span class="nt">--interp</span><span class="o">=</span>nn
 
 <span class="c">############################################################</span>
 <span class="c"># Left hemisphere</span>
 <span class="c"># Loop through ROIs:</span>
 <span class="k">for </span>roinum <span class="k">in </span>0<span class="o">{</span>0..9<span class="o">}</span> <span class="o">{</span>10..47<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
 <span class="c"># Extract ROI from atlas:</span>
-fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort_nat roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
 <span class="c"># Threshold probabilistic ROI mask:</span>
 fslmaths roimask_<span class="nv">$roinum</span> <span class="nt">-thr</span> 50 <span class="nt">-bin</span> <span class="nt">-mas</span> leftCortex roimask_<span class="nv">$roinum</span> 
 <span class="c"># Extract ROI mean time series:</span>
@@ -374,7 +386,7 @@ fslmeants <span class="nt">-i</span> <span class="k">${</span><span class="nv">p
 <span class="c"># Loop through ROIs:</span>
 <span class="k">for </span>roinum <span class="k">in </span>0<span class="o">{</span>0..9<span class="o">}</span> <span class="o">{</span>10..47<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
 <span class="c"># Extract ROI from atlas:</span>
-fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_cort_nat roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
 <span class="c"># Threshold probabilistic ROI mask:</span>
 fslmaths roimask_<span class="nv">$roinum</span> <span class="nt">-thr</span> 50 <span class="nt">-bin</span> <span class="nt">-mas</span> rightCortex roimask_<span class="nv">$roinum</span> 
 <span class="c"># Extract ROI mean time series:</span>
@@ -388,14 +400,11 @@ fslmeants <span class="nt">-i</span> <span class="k">${</span><span class="nv">p
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">############################################################</span>
 <span class="c"># Subcortical structures</span>
-<span class="nb">export </span><span class="nv">atlas_subc</span><span class="o">=</span>/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-sub-prob-2mm.nii.gz
-applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_subc</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
- <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc <span class="nt">--interp</span><span class="o">=</span>nn
 <span class="c">############################################################</span>
 <span class="c"># Loop through ROIs:</span>
 <span class="k">for </span>roinum <span class="k">in </span>0<span class="o">{</span>0..9<span class="o">}</span> <span class="o">{</span>10..20<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
 <span class="c"># Extract ROI from atlas:</span>
-fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_subc_nat roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
 <span class="c"># Threshold probabilistic ROI mask:</span>
 fslmaths roimask_<span class="nv">$roinum</span> <span class="nt">-thr</span> 50 <span class="nt">-bin</span> roimask_<span class="nv">$roinum</span> 
 <span class="c"># Extract ROI mean time series:</span>
@@ -411,13 +420,13 @@ fslmeants <span class="nt">-i</span> <span class="k">${</span><span class="nv">p
 <span class="c"># Thalamic  subfields</span>
 <span class="c">############################################################</span>
 <span class="nb">export </span><span class="nv">atlas_thal</span><span class="o">=</span>/usr/local/fsl/data/atlases/Thalamus/Thalamus-prob-2mm.nii.gz
-applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_thal</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/mc/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_baseline <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
- <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_thal <span class="nt">--interp</span><span class="o">=</span>nn
+applywarp <span class="nt">-i</span> <span class="k">${</span><span class="nv">atlas_thal</span><span class="k">}</span> <span class="nt">-r</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/func/<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>_mean <span class="nt">--postmat</span><span class="o">=</span><span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/T1toT2_<span class="k">${</span><span class="nv">scan</span><span class="k">}</span>.mat <span class="se">\</span>
+ <span class="nt">-w</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/reg/MNItoT1_warp <span class="nt">-o</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_thal_nat <span class="nt">--interp</span><span class="o">=</span>nn
 <span class="c">############################################################</span>
 <span class="c"># Loop through ROIs:</span>
 <span class="k">for </span>roinum <span class="k">in </span>0<span class="o">{</span>0..6<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
 <span class="c"># Extract ROI from atlas:</span>
-fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_thal roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
+fslroi <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/atlas_thal_nat roimask_<span class="nv">$roinum</span> <span class="nv">$roinum</span> 1
 <span class="c"># Threshold probabilistic ROI mask:</span>
 fslmaths roimask_<span class="nv">$roinum</span> <span class="nt">-thr</span> 50 <span class="nt">-bin</span> roimask_<span class="nv">$roinum</span> 
 <span class="c"># Extract ROI mean time series:</span>
@@ -453,23 +462,23 @@ fslmaths <span class="k">${</span><span class="nv">input</span><span class="k">}
 <span class="c">##########################################################################################</span>
 <span class="c"># Start from header (if lucky) or from FLIRT or mri_coreg alignment:</span>
 
-mri_coreg <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_mean.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.lta <span class="nt">--debug</span>
+mri_coreg <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_mean.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>.lta <span class="nt">--debug</span>
 
 <span class="c"># Check results:</span>
-<span class="c"># tkregisterfv --mov ${input}_mean.nii.gz --targ $FREESURFER_HOME/subjects/S${subjnum}/mri/brainmask.mgz --reg ${pth}/fsurf/tkreg_run$cond.lta --s S${subjnum}  --surfs</span>
+<span class="c"># tkregisterfv --mov ${input}_mean.nii.gz --targ $FREESURFER_HOME/subjects/S${subjnum}/mri/brainmask.mgz --reg ${pth}/fsurf/tkreg_run${cond}.lta --s S${subjnum}  --surfs</span>
 
 <span class="c"># Boundary based registration (based on segmentation):</span>
 
-bbregister <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_mean.nii.gz <span class="nt">--bold</span> <span class="nt">--init-reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.lta <span class="se">\</span>
- <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.dat <span class="nt">--fslmat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/fsT2toT1_run<span class="nv">$cond</span>.mat <span class="nt">--wm-proj-abs</span> 2 
+bbregister <span class="nt">--s</span> S<span class="k">${</span><span class="nv">subjnum</span><span class="k">}</span> <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_mean.nii.gz <span class="nt">--bold</span> <span class="nt">--init-reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>.lta <span class="se">\</span>
+ <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>.dat <span class="nt">--fslmat</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/fsT2toT1_run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>.mat <span class="nt">--wm-proj-abs</span> 2 
 
 <span class="c"># Check:</span>
-<span class="c"># tkregisterfv --mov ${input}_mean.nii.gz --reg ${pth}/fsurf/tkreg_run$cond.dat --surfs </span>
+<span class="c"># tkregisterfv --mov ${input}_mean.nii.gz --reg ${pth}/fsurf/tkreg_run${cond}.dat --surfs </span>
 
 <span class="c"># Awesome! and can be improved my hand and also iterating.</span>
 
 <span class="c"># Obtain registered T2 by writing alignment to header</span>
-mri_vol2vol <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.dat <span class="nt">--o</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--trilin</span> <span class="nt">--fstarg</span> <span class="nt">--no-resample</span>
+mri_vol2vol <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>.nii.gz <span class="nt">--reg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>.dat <span class="nt">--o</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--trilin</span> <span class="nt">--fstarg</span> <span class="nt">--no-resample</span>
 
 <span class="c"># Check results:</span>
 <span class="c"># tkregisterfv --mov ${input}_mean.nii.gz --targ $FREESURFER_HOME/subjects/S${subjnum}/mri/orig.mgz \</span>
@@ -477,10 +486,10 @@ mri_vol2vol <span class="nt">--mov</span> <span class="k">${</span><span class="
 <span class="c">## Interpolate functional to anatomical surface (similar to_freesurfer.py)</span>
 <span class="nb">export </span><span class="nv">method</span><span class="o">=</span>trilinear
 <span class="nb">export </span><span class="nv">hemis</span><span class="o">=</span>lh
-mri_vol2surf <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--srcreg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.dat <span class="nt">--hemi</span> <span class="k">${</span><span class="nv">hemis</span><span class="k">}</span> <span class="nt">--cortex</span> <span class="se">\</span>
+mri_vol2surf <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--srcreg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>.dat <span class="nt">--hemi</span> <span class="k">${</span><span class="nv">hemis</span><span class="k">}</span> <span class="nt">--cortex</span> <span class="se">\</span>
 <span class="nt">--out</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg_func2surf_<span class="k">${</span><span class="nv">hemis</span><span class="k">}</span>.mgz <span class="nt">--interp</span> <span class="k">${</span><span class="nv">method</span><span class="k">}</span> <span class="nt">--projfrac</span> 0.5
 <span class="nb">export </span><span class="nv">hemis</span><span class="o">=</span>rh
-mri_vol2surf <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--srcreg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="nv">$cond</span>.dat <span class="nt">--hemi</span> <span class="k">${</span><span class="nv">hemis</span><span class="k">}</span> <span class="nt">--cortex</span> <span class="se">\</span>
+mri_vol2surf <span class="nt">--mov</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg.nii.gz <span class="nt">--srcreg</span> <span class="k">${</span><span class="nv">pth</span><span class="k">}</span>/fsurf/tkreg_run<span class="k">${</span><span class="nv">cond</span><span class="k">}</span>.dat <span class="nt">--hemi</span> <span class="k">${</span><span class="nv">hemis</span><span class="k">}</span> <span class="nt">--cortex</span> <span class="se">\</span>
 <span class="nt">--out</span> <span class="k">${</span><span class="nv">input</span><span class="k">}</span>_reg_func2surf_<span class="k">${</span><span class="nv">hemis</span><span class="k">}</span>.mgz <span class="nt">--interp</span> <span class="k">${</span><span class="nv">method</span><span class="k">}</span> <span class="nt">--projfrac</span> 0.5
 </code></pre></div></div>
 
@@ -507,26 +516,220 @@ freeview <span class="nt">-f</span> <span class="nv">$FREESURFER_HOME</span>/sub
 
 <h2 id="13--import-freesurfer-data-in-pycortex"><strong>13.-</strong> Import Freesurfer data in Pycortex</h2>
 
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 <span class="nt">-m</span> venv piCortex
+<span class="nb">source </span>piCortex/bin/activate
+pip <span class="nb">install</span> <span class="nt">--upgrade</span> pip
+pip <span class="nb">install</span> <span class="nt">-U</span> setuptools wheel numpy cython
+pip <span class="nb">install</span> <span class="nt">-U</span> pycortex
+pip <span class="nb">install </span>ipython
+<span class="nb">source</span> /Users/nicogravel/piCortex/bin/activate
+<span class="nb">export </span><span class="nv">FREESURFER_HOME</span><span class="o">=</span>/Applications/freesurfer
+<span class="nb">source</span> <span class="nv">$FREESURFER_HOME</span>/SetUpFreeSurfer.sh
+jupyter notebook
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">cortex</span>
+<span class="kn">import</span> <span class="nn">cortex.polyutils</span>
+<span class="kn">from</span> <span class="nn">cortex.options</span> <span class="kn">import</span> <span class="n">config</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">cortex</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">usercfg</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'basic'</span><span class="p">,</span> <span class="s">'filestore'</span><span class="p">))</span>
+
+
+<span class="n">subject</span> <span class="o">=</span> <span class="s">"S15"</span>
+
+<span class="n">cortex</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">import_subj</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">whitematter_surf</span><span class="o">=</span><span class="s">"white"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>If the import fails. Delete the subject folder from the pyCortex database before trzing again:</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> /Users/nicogravel/piCortex/share/pycortex/db
+<span class="nb">ls
+rm</span> <span class="nt">-r</span> S15
+</code></pre></div></div>
+
+<p>Restart kernel before importing the next subject</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">IPython.core.display</span> <span class="kn">import</span> <span class="n">HTML</span>
+
+<span class="n">HTML</span><span class="p">(</span><span class="s">"&lt;script&gt;Jupyter.notebook.kernel.restart()&lt;/script&gt;"</span><span class="p">)</span>
+</code></pre></div></div>
+
 <hr />
 
 <p><a name="14"></a></p>
 
 <h2 id="14--compute-cortical-geodesic-distances-in-millimeters-using-pycortex"><strong>14.-</strong> Compute cortical (geodesic) distances in millimeters using Pycortex</h2>
 
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">cortex</span>
+<span class="kn">import</span> <span class="nn">cortex.polyutils</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span><span class="p">,</span> <span class="n">h5py</span> 
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="n">sio</span>
+<span class="kn">import</span> <span class="nn">nibabel.freesurfer.mghformat</span> <span class="k">as</span> <span class="n">mgh</span>
+<span class="kn">from</span> <span class="nn">cortex.options</span> <span class="kn">import</span> <span class="n">config</span>
+    
+
+<span class="k">print</span><span class="p">(</span><span class="n">cortex</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">usercfg</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'basic'</span><span class="p">,</span> <span class="s">'filestore'</span><span class="p">))</span>
+
+<span class="n">folder</span> <span class="o">=</span> <span class="p">(</span><span class="s">'/Volumes/Data/yourData/'</span><span class="p">)</span>
+<span class="n">subject</span> <span class="o">=</span> <span class="p">(</span><span class="s">'S12'</span><span class="p">,</span> <span class="s">'S13'</span><span class="p">,</span> <span class="s">'S14'</span><span class="p">,</span> <span class="s">'S15'</span><span class="p">,</span> <span class="s">'S16'</span><span class="p">,</span> <span class="s">'S17'</span><span class="p">,</span> <span class="s">'S18'</span><span class="p">,</span> <span class="s">'S19'</span><span class="p">,</span> <span class="s">'S20'</span><span class="p">,</span> <span class="s">'S21'</span><span class="p">)</span>
+<span class="n">rois</span> <span class="o">=</span> <span class="p">(</span><span class="s">'V1'</span><span class="p">,</span> <span class="s">'V2'</span><span class="p">,</span><span class="s">'V3'</span><span class="p">)</span> <span class="c1"># rois: V1, V2, V3, hV4, VO1, VO2, LO1, LO2, TO1, TO2, V3b, V3a
+</span>
+
+    
+<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        
+    
+    <span class="c1"># First we need to import the surfaces for this subject
+</span>    <span class="n">surfs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">surfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">cortex</span><span class="o">.</span><span class="n">polyutils</span><span class="o">.</span><span class="n">Surface</span><span class="p">(</span><span class="o">*</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">cortex</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_surf</span><span class="p">(</span><span class="n">subject</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="s">"fiducial"</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">roi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+
+        <span class="c1"># Left hemisphere
+</span>        <span class="n">atlas</span> <span class="o">=</span> <span class="n">mgh</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">subject</span><span class="p">[</span><span class="n">s</span><span class="p">])</span> <span class="o">+</span> <span class="s">'/fsurf/lh.benson14_varea.mgz'</span><span class="p">)</span>
+        <span class="n">areas</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">atlas</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'shape of data array:'</span><span class="p">,</span> <span class="n">areas</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">roi_lh</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="n">roi_lh</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">areas</span><span class="p">))</span> <span class="k">if</span> <span class="n">areas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">roi</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> 
+        <span class="n">roi_lh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">roi_lh</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">roi_lh</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">cdist_lh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">roi_lh</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">roi_lh</span><span class="p">)])</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">roi_lh</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">vert</span> <span class="o">=</span> <span class="n">roi_lh</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> 
+            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="n">surfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">geodesic_distance</span><span class="p">(</span><span class="n">roi_lh</span><span class="p">[</span><span class="n">p</span><span class="p">])]</span>
+            <span class="n">lh</span> <span class="o">=</span> <span class="n">dists</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">roi_lh</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">cdist_lh</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="n">lh</span><span class="p">[</span><span class="n">roi_lh</span><span class="p">[</span><span class="n">q</span><span class="p">]]</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'shape of data array:'</span><span class="p">,</span> <span class="n">cdist_lh</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># Save cortical distance matrix 
+</span>        <span class="n">sio</span><span class="o">.</span><span class="n">savemat</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">subject</span><span class="p">[</span><span class="n">s</span><span class="p">])</span> <span class="o">+</span> <span class="s">'/fsurf/cdis_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rois</span><span class="p">[</span><span class="n">roi</span><span class="p">])</span> <span class="o">+</span> <span class="s">'_lh.mat'</span><span class="p">,</span> <span class="p">{</span><span class="s">'arr'</span><span class="p">:</span> <span class="n">cdist_lh</span><span class="p">})</span>
+
+        <span class="c1"># Right hemisphere
+</span>        <span class="n">areas</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="n">atlas</span> <span class="o">=</span> <span class="n">mgh</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">subject</span><span class="p">[</span><span class="n">s</span><span class="p">])</span> <span class="o">+</span> <span class="s">'/fsurf/rh.benson14_varea.mgz'</span><span class="p">)</span>
+        <span class="n">areas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">atlas</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'shape of data array:'</span><span class="p">,</span> <span class="n">areas</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">roi_rh</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="n">roi_rh</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">areas</span><span class="p">))</span> <span class="k">if</span> <span class="n">areas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">roi</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> 
+        <span class="n">roi_rh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">roi_rh</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">roi_rh</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">cdist_rh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">roi_rh</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">roi_rh</span><span class="p">)])</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">roi_rh</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">vert</span> <span class="o">=</span> <span class="n">roi_rh</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> 
+            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="n">surfs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">geodesic_distance</span><span class="p">(</span><span class="n">roi_rh</span><span class="p">[</span><span class="n">p</span><span class="p">])]</span>
+            <span class="n">rh</span> <span class="o">=</span> <span class="n">dists</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">roi_rh</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">cdist_rh</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="n">rh</span><span class="p">[</span><span class="n">roi_rh</span><span class="p">[</span><span class="n">q</span><span class="p">]]</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'shape of data array:'</span><span class="p">,</span> <span class="n">cdist_rh</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># Save cortical sdistance matrix 
+</span>        <span class="n">sio</span><span class="o">.</span><span class="n">savemat</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">subject</span><span class="p">[</span><span class="n">s</span><span class="p">])</span> <span class="o">+</span> <span class="s">'/fsurf/cdis_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rois</span><span class="p">[</span><span class="n">roi</span><span class="p">])</span> <span class="o">+</span> <span class="s">'_rh.mat'</span><span class="p">,</span> <span class="p">{</span><span class="s">'arr'</span><span class="p">:</span> <span class="n">cdist_rh</span><span class="p">})</span>
+</code></pre></div></div>
+
+<p>Plot cortical distances</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">'figure.figsize'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cdist_rh</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'vertex'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'vertex'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">'Cortical distance (mm)'</span><span class="p">)</span>
+</code></pre></div></div>
+
 <hr />
 
 <p><a name="15"></a></p>
 
-<h2 id="15--load-data-in-matlab-and-python"><strong>15.-</strong> Load data in Matlab and Python</h2>
+<h2 id="15--load-data-in-python"><strong>15.-</strong> Load data in Python</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="n">spsg</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="n">stt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>  
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">butter</span><span class="p">,</span> <span class="n">filtfilt</span>
+
+
+<span class="c1"># Time resolution for fMRI signals (in seconds)
+</span><span class="n">TR</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">210</span>    <span class="c1"># number of TRs of the recording
+</span>
+
+<span class="c1"># Filter the BOLD signals between 0.01 and 0.2 Hz
+</span><span class="n">n_order</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">Nyquist_freq</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">TR</span>
+<span class="n">low_f</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">/</span> <span class="n">Nyquist_freq</span>
+<span class="n">high_f</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">/</span> <span class="n">Nyquist_freq</span>
+<span class="n">b</span><span class="p">,</span><span class="n">a</span> <span class="o">=</span> <span class="n">spsg</span><span class="o">.</span><span class="n">iirfilter</span><span class="p">(</span><span class="n">n_order</span><span class="p">,</span> <span class="p">[</span><span class="n">low_f</span><span class="p">,</span><span class="n">high_f</span><span class="p">],</span> <span class="n">btype</span><span class="o">=</span><span class="s">'bandpass'</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s">'butter'</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s">'/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe/S15/results/nat/tseries_cort_lh.txt'</span><span class="p">)</span>
+<span class="c1">#data = np.loadtxt('/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe/S15/results/nat/tseries_cort_rh.txt')
+#data = np.loadtxt('/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe/S15/results/nat/tseries_subc.txt')
+#data = np.loadtxt('/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe/S15/results/nat/tseries_thal.txt')
+</span>
+<span class="c1"># Filtered time series
+</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">'figure.figsize'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="n">ts</span> <span class="o">=</span> <span class="n">spsg</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">),</span><span class="n">ts</span><span class="p">)</span>
+<span class="c1">#plt.plot(range(T),data)
+</span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'time'</span><span class="p">)</span>
+
+<span class="c1"># Correlations
+</span><span class="n">actmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">'shape of data array:'</span><span class="p">,</span> <span class="n">actmat</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">actmat</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">######################
+# fMRI data properties    
+</span><span class="n">n_sub</span> <span class="o">=</span> <span class="mi">7</span>  <span class="c1"># number of subjects
+</span><span class="n">n_run</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># conditions / treatments
+#N = 103     # number of ROIs + thalamus
+</span><span class="n">N</span> <span class="o">=</span> <span class="mi">96</span>     <span class="c1"># number of ROIs
+</span><span class="n">T</span> <span class="o">=</span> <span class="mi">210</span>    <span class="c1"># number of TRs of the recording
+</span><span class="n">scrt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n_sub</span><span class="p">,</span><span class="n">n_run</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">T</span><span class="p">])</span>
+
+<span class="c1"># fMRI data files 
+</span><span class="n">rootdir</span> <span class="o">=</span> <span class="s">'/Users/nicogravel/Documents/fMRI/Meditech/jpNotebook/data'</span>
+<span class="n">idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="k">for</span> <span class="n">subdir</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">rootdir</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="nb">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="c1">#print os.path.join(subdir, file)
+</span>        <span class="n">filepath</span> <span class="o">=</span> <span class="n">subdir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="nb">file</span>
+        <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">"lh.txt"</span><span class="p">):</span>
+            <span class="c1">#print (subdir)
+</span>            <span class="n">lh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="s">'tseries_cort_lh.txt'</span><span class="p">))</span>
+            <span class="n">rh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="s">'tseries_cort_rh.txt'</span><span class="p">))</span>
+            <span class="n">th</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="s">'tseries_thal.txt'</span><span class="p">))</span>
+            <span class="c1">#ts = np.hstack((lh,rh,th))
+</span>            <span class="n">ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">lh</span><span class="p">,</span><span class="n">rh</span><span class="p">))</span>
+            <span class="n">subj</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filepath</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1">#print(int(subj)-2)
+</span>            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1">#print(idx)
+</span>            <span class="c1">#scrt[(int(subj)-2),0,:,:] = ts.T  # SubjectConditionRoiTime 
+</span>            <span class="n">scrt</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span><span class="mi">0</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># SubjectConditionRoiTime 
+</span>            <span class="c1">#print('shape of data array:', scrt.shape)
+</span>            <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s">'S'</span> <span class="o">+</span> <span class="n">subj</span><span class="p">)</span>
+            <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lh</span><span class="p">)</span>
+            <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rh</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</code></pre></div></div>
 
 <hr />
 
-
-
-</div>
-
   
+</div>
   </body>
+
 
 
 <script>
@@ -539,11 +742,6 @@ freeview <span class="nt">-f</span> <span class="nv">$FREESURFER_HOME</span>/sub
   ga('send', 'pageview');
 
 </script>
-
-   <!--    -->
-
-      <!--    -->
-
 
 <div id="disqus_thread"></div>
 <script type="text/javascript">
@@ -608,6 +806,19 @@ freeview <span class="nt">-f</span> <span class="nv">$FREESURFER_HOME</span>/sub
   ga('send', 'pageview');
 
 </script>
+
+
+
+
+
+<nav id="navbar" class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        
+        
+    </ul>
+</nav>
+
+
 
 
 </html>

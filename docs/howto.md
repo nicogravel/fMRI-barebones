@@ -10,28 +10,29 @@ title: "fMRI-barebones"
 
 ### Contents:
 
-1. [Setup](/fMRI-barebones/howto.html#1)
-2. [Cortical surface reconstruction using Freesurfer](/fMRI-barebones/howto.html#2)
-3. [Obtain Freesurfer retinotopic templates and atlases for cortical visual regions using Neuropythy](/fMRI-barebones/howto.html#3)
-4. [Skull stripping using FSL (optional)](/fMRI-barebones/howto.html#4)
-5. [Linear registration to standard space using FSL](/fMRI-barebones/howto.html#5)
-6. [Non-linear registration to standard space using FSL](/fMRI-barebones/howto.html#6)
-7. [Functional to structural co-registration using FSL](/fMRI-barebones/howto.html#7)
-8. [Functional to structural co-registration using Freesurfer (optional)](/fMRI-barebones/howto.html#8)
-9. [Remove motion artifacts using ICA-AROMA](/fMRI-barebones/howto.html#9)
-10. [Obtain BOLD time series from ROIs in FSL atlases](/fMRI-barebones/howto.html#10)
-11. [Create .MGZ files with surface-node X ROI parameter/time series](/fMRI-barebones/howto.html#11)
-12. [Project data to the cortical surface reconstruction](/fMRI-barebones/howto.html#12)
-13. [Import Freesurfer data into Pycortex](/fMRI-barebones/howto.html#13)
-14. [Compute cortical (geodesic) distances in millimeters using Pycortex](/fMRI-barebones/howto.html#14)
-15. [Load data in Matlab and Python](/fMRI-barebones/howto.html#15)
+
+1. [Setup]({{site.baseurl}}/howto.html)
+2. [Cortical surface reconstruction using Freesurfer]({{site.baseurl}}/howto.html#2)
+3. [Obtain Freesurfer retinotopic templates and atlases for cortical visual regions using Neuropythy]({{site.baseurl}}/howto.html#3)
+4. [Skull stripping using FSL (optional)]({{site.baseurl}}/howto.html#4)
+5. [Linear registration to standard space using FSL]({{site.baseurl}}/howto.html#5)
+6. [Non-linear registration to standard space using FSL]({{site.baseurl}}/howto.html#6)
+7. [Functional to structural co-registration using FSL]({{site.baseurl}}/howto.html#7)
+8. [Functional to structural co-registration using Freesurfer (optional)]({{site.baseurl}}/howto.html#8)
+9. [Remove motion artifacts using ICA-AROMA]({{site.baseurl}}/howto.html#9)
+10. [Obtain BOLD time series from ROIs in FSL atlases]({{site.baseurl}}/howto.html#10)
+11. [Create .MGZ files with surface-node X ROI parameter/time series]({{site.baseurl}}/howto.html#11)
+12. [Project data to the cortical surface reconstruction]({{site.baseurl}}/howto.html#12)
+13. [Import Freesurfer data into Pycortex]({{site.baseurl}}/howto.html#13)
+14. [Compute cortical (geodesic) distances in millimeters using Pycortex]({{site.baseurl}}/howto.html#14)
+15. [Load data in Python]({{site.baseurl}}/howto.html#15)
 
 
 ---
 
 <a name="1"></a>
 
-## **1.-** Setup
+## **1.-** Setup 
 
 In its present form, fMRI-barebones is a minimal fMRI preprocessing pipeline implemented in terminal using shell scripts (files containing a series of commands). At the moment it works in OSX, but should be easily adapted to Linux. To succesfully edit and run fMRI-barebones template scripts, you need FSL, Freesurfer and a Python environment (with the correct depencies for ICA-AROMA, Neuropythy and Pycortex) correctly installed, and Matlab/Jupyter (for analytics and visualzation). 
   
@@ -103,7 +104,7 @@ The original T1 typically has signal intensity gradients and dropouts. A solutio
 ```shell
 export FREESURFER_HOME=/Applications/freesurfer
 source $FREESURFER_HOME/SetUpFreeSurfer.sh
-export data_folder=/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe
+export data_folder=/Users/nicogravel/Documents/fMRI/Tutorials{{site.baseurl}}_mwe
 export subjnum=15
 export subjid=S${subjnum}
 export pth=${data_folder}/${subjid}
@@ -117,8 +118,8 @@ mri_convert ${pth}/anat/T1_norm.mgz ${pth}/anat/T1_norm.nii.gz
 bet ${pth}/anat/T1_norm.nii.gz ${pth}/anat/T1_norm_brain -f 0.5 -R -B
 ```
 
-![orig](/fMRI-barebones/assets/orig.png)
-![n3norm](/fMRI-barebones/assets/n3norm.png)
+![orig]({{site.baseurl}}/assets/orig.png)
+![n3norm]({{site.baseurl}}/assets/n3norm.png)
 
 > Note: It is also recommended to pre-align the T1 to ACPC coordinates. This helps BET find the center of mass of the head improving its performance considerably.
 
@@ -329,7 +330,7 @@ fsl_regfilt -i ${pth}/func/${scan}.nii.gz -d ${pth}/mc/ica_aroma_${scan}/melodic
 
 The following is the Harvard-Oxford subcortical atlas overlaid on top of the structural data of a single subject: 
 
-![subc](/fMRI-barebones/assets/subc.png)
+![subc]({{site.baseurl}}/assets/subc.png)
 
 
 ```shell
@@ -524,12 +525,56 @@ export hemis=lh
 freeview -f $FREESURFER_HOME/subjects/S${subjnum}/surf/${hemis}.inflated
 ```
 
-![Picture](/fMRI-barebones/assets/benson.png){:height="320px" width="320px"}![Picture](/fMRI-barebones/assets/wang.png){:height="320px" width="320px"}
+![Picture]({{site.baseurl}}/assets/benson.png){:height="320px" width="320px"}![Picture]({{site.baseurl}}/assets/wang.png){:height="320px" width="320px"}
 
 
 <a name="13"></a>
 
 ## **13.-** Import Freesurfer data in Pycortex
+
+```shell
+python3 -m venv piCortex
+source piCortex/bin/activate
+pip install --upgrade pip
+pip install -U setuptools wheel numpy cython
+pip install -U pycortex
+pip install ipython
+source /Users/nicogravel/piCortex/bin/activate
+export FREESURFER_HOME=/Applications/freesurfer
+source $FREESURFER_HOME/SetUpFreeSurfer.sh
+jupyter notebook
+```
+
+```python
+import cortex
+import cortex.polyutils
+from cortex.options import config
+
+print(cortex.options.usercfg)
+print(config.get('basic', 'filestore'))
+
+
+subject = "S15"
+
+cortex.freesurfer.import_subj(subject, whitematter_surf="white")
+```
+
+If the import fails. Delete the subject folder from the pyCortex database before trzing again:
+```shell
+cd /Users/nicogravel/piCortex/share/pycortex/db
+ls
+rm -r S15
+```
+
+Restart kernel before importing the next subject
+
+```python
+import os
+from IPython.core.display import HTML
+
+HTML("<script>Jupyter.notebook.kernel.restart()</script>")
+```
+
 
 
 ---
@@ -538,14 +583,177 @@ freeview -f $FREESURFER_HOME/subjects/S${subjnum}/surf/${hemis}.inflated
 
 ## **14.-** Compute cortical (geodesic) distances in millimeters using Pycortex
 
+```python
+import cortex
+import cortex.polyutils
+import numpy as np, h5py 
+import matplotlib.pyplot as plt
+import scipy.io as sio
+import nibabel.freesurfer.mghformat as mgh
+from cortex.options import config
+    
+
+print(cortex.options.usercfg)
+print(config.get('basic', 'filestore'))
+
+folder = ('/Volumes/Data/yourData/')
+subject = ('S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19', 'S20', 'S21')
+rois = ('V1', 'V2','V3') # rois: V1, V2, V3, hV4, VO1, VO2, LO1, LO2, TO1, TO2, V3b, V3a
+
+
+    
+for s in range(10):
+        
+    
+    # First we need to import the surfaces for this subject
+    surfs = []
+    surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(subject[s], "fiducial")]
+
+    for roi in range(2):
+
+        # Left hemisphere
+        atlas = mgh.load(str(folder) + str(subject[s]) + '/fsurf/lh.benson14_varea.mgz')
+        areas =  np.squeeze(atlas.get_fdata())
+        print('shape of data array:', areas.shape)
+        roi_lh = [] 
+        roi_lh = [i for i in range(len(areas)) if areas[i] == roi + 1] 
+        roi_lh = np.asarray(roi_lh, dtype=int)
+        print(roi_lh.shape)
+        cdist_lh = np.zeros([len(roi_lh),len(roi_lh)])
+        for p in range(0,len(roi_lh)-1):
+            vert = roi_lh[p] 
+            dists = [surfs[0].geodesic_distance(roi_lh[p])]
+            lh = dists[0]
+            for q in range(0,len(roi_lh)-1):
+                cdist_lh[p,q] = lh[roi_lh[q]]
+        print('shape of data array:', cdist_lh.shape)
+        # Save cortical distance matrix 
+        sio.savemat(str(folder) + str(subject[s]) + '/fsurf/cdis_' + str(rois[roi]) + '_lh.mat', {'arr': cdist_lh})
+
+        # Right hemisphere
+        areas = [] 
+        atlas = mgh.load(str(folder) + str(subject[s]) + '/fsurf/rh.benson14_varea.mgz')
+        areas = np.squeeze(atlas.get_fdata())
+        print('shape of data array:', areas.shape)
+        roi_rh = [] 
+        roi_rh = [i for i in range(len(areas)) if areas[i] == roi + 1] 
+        roi_rh = np.asarray(roi_rh, dtype=int)
+        print(roi_rh.shape)
+        cdist_rh = np.zeros([len(roi_rh),len(roi_rh)])
+        for p in range(0,len(roi_rh)-1):
+            vert = roi_rh[p] 
+            dists = [surfs[1].geodesic_distance(roi_rh[p])]
+            rh = dists[0]
+            for q in range(0,len(roi_rh)-1):
+                cdist_rh[p,q] = rh[roi_rh[q]]
+        print('shape of data array:', cdist_rh.shape)
+        # Save cortical sdistance matrix 
+        sio.savemat(str(folder) + str(subject[s]) + '/fsurf/cdis_' + str(rois[roi]) + '_rh.mat', {'arr': cdist_rh})
+```
+
+Plot cortical distances
+
+```python
+plt.rcParams['figure.figsize'] = [20, 20]
+plt.figure()
+plt.imshow(cdist_rh)
+plt.colorbar()
+plt.xlabel('vertex', fontsize=14)
+plt.ylabel('vertex', fontsize=14)
+plt.title('Cortical distance (mm)')
+```
+
 
 ---
 
 <a name="15"></a>
 
-## **15.-** Load data in Matlab and Python  
+## **15.-** Load data in Python  
+
+```python
+import os
+import numpy as np
+import scipy.signal as spsg
+import scipy.stats as stt
+import matplotlib  
+from matplotlib import pyplot as plt
+from scipy.signal import butter, filtfilt
+
+
+# Time resolution for fMRI signals (in seconds)
+TR = 2.0
+T = 210    # number of TRs of the recording
+
+
+# Filter the BOLD signals between 0.01 and 0.2 Hz
+n_order = 4
+Nyquist_freq = 0.5 / TR
+low_f = 0.01 / Nyquist_freq
+high_f = 0.1 / Nyquist_freq
+b,a = spsg.iirfilter(n_order, [low_f,high_f], btype='bandpass', ftype='butter')
+
+data = np.loadtxt('/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe/S15/results/nat/tseries_cort_lh.txt')
+#data = np.loadtxt('/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe/S15/results/nat/tseries_cort_rh.txt')
+#data = np.loadtxt('/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe/S15/results/nat/tseries_subc.txt')
+#data = np.loadtxt('/Users/nicogravel/Documents/fMRI/Tutorials/fMRI-barebones_mwe/S15/results/nat/tseries_thal.txt')
+
+# Filtered time series
+plt.figure()
+plt.rcParams['figure.figsize'] = [20, 5]
+ts = spsg.filtfilt(b,a,data, axis=-1)
+plt.plot(range(T),ts)
+#plt.plot(range(T),data)
+plt.xlabel('time')
+
+# Correlations
+actmat = np.corrcoef(data.T)
+print('shape of data array:', actmat.shape)
+plt.figure()
+plt.imshow(actmat)
+plt.colorbar()
+```
+
+```python
+######################
+# fMRI data properties    
+n_sub = 7  # number of subjects
+n_run = 2  # conditions / treatments
+#N = 103     # number of ROIs + thalamus
+N = 96     # number of ROIs
+T = 210    # number of TRs of the recording
+scrt = np.zeros([n_sub,n_run,N,T])
+
+# fMRI data files 
+rootdir = '/Users/nicogravel/Documents/fMRI/Meditech/jpNotebook/data'
+idx = -1
+for subdir, dirs, files in sorted(os.walk(rootdir)):
+    for file in files:
+        #print os.path.join(subdir, file)
+        filepath = subdir + os.sep + file
+        if filepath.endswith("lh.txt"):
+            #print (subdir)
+            lh = np.loadtxt(os.path.join(subdir, 'tseries_cort_lh.txt'))
+            rh = np.loadtxt(os.path.join(subdir, 'tseries_cort_rh.txt'))
+            th = np.loadtxt(os.path.join(subdir, 'tseries_thal.txt'))
+            #ts = np.hstack((lh,rh,th))
+            ts = np.hstack((lh,rh))
+            subj = os.path.split(os.path.dirname(filepath))[1]
+            #print(int(subj)-2)
+            idx += 1
+            #print(idx)
+            #scrt[(int(subj)-2),0,:,:] = ts.T  # SubjectConditionRoiTime 
+            scrt[idx,0,:,:] = ts.T  # SubjectConditionRoiTime 
+            #print('shape of data array:', scrt.shape)
+            fig, axs = plt.subplots(2)
+            fig.suptitle('S' + subj)
+            axs[0].plot(lh)
+            axs[1].plot(rh)
+            plt.show(block=False)
+```
 
 
 ---
+
+
 
 

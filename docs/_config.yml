@@ -1,7 +1,9 @@
 name: Nicolas Gravel
 markdown: kramdown
 highlighter: rouge
-baseurl: ""
+baseurl: "/fMRI-barebones"
+#baseurl: "" # for local deployment
 footer-links:
   github: nicogravel
   twitter: nicog
+
